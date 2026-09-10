@@ -7,6 +7,7 @@ import {
   updateLineItem,
 } from "@/lib/data/cart"
 import { addToCartEventBus } from "@/lib/data/cart-event-bus"
+import { ecFromLine, ecRemove } from "@/lib/util/metrika"
 import { ApprovalStatusType } from "@/types/approval"
 import { B2BCart } from "@/types/global"
 import type {
@@ -188,6 +189,7 @@ export function CartProvider({
     const item = optimisticCart?.items?.find(({ id }) => id === lineItem)
 
     if (!item) return
+    ecRemove([ecFromLine(item as any)]) // ecommerce «remove» для Метрики
 
     let prevCart = {} as B2BCart
 

@@ -9,6 +9,7 @@ import { notFound } from "next/navigation"
 import React, { Suspense } from "react"
 import ProductActionsWrapper from "./product-actions-wrapper"
 import ProductFacts from "../components/product-facts"
+import EcDetail from "@/modules/analytics/ec-detail"
 
 type ProductTemplateProps = {
   product: HttpTypes.StoreProduct
@@ -22,6 +23,7 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({ product, region, coun
   return (
     <div className="bg-oh-paper/60">
       <div className="content-container flex flex-col gap-4 py-6">
+        <EcDetail product={product} />
         <div className="grid w-full grid-cols-1 gap-6 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]" data-testid="product-container">
           <ImageGallery product={product} />
           <div className="flex w-full flex-col gap-5">

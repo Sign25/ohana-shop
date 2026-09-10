@@ -2,7 +2,8 @@
 
 import LocalizedClientLink from "@/modules/common/components/localized-client-link"
 import { clx } from "@medusajs/ui"
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
+import { reachGoal } from "@/lib/util/metrika"
 
 /** Подбор российского размера по меркам: взрослые — по обхватам (ГОСТ), дети — по росту. Логика перенесена со старого сайта. */
 const RU = [44, 46, 48, 50, 52, 54, 56, 58, 60, 62, 64]
@@ -111,6 +112,10 @@ const SizeFinder = () => {
   const set = (k: string, v: string) => setF((p) => ({ ...p, [k]: v }))
   const isKid = seg === "g" || seg === "b"
   const r = useMemo(() => (isKid ? calcKid(f) : calcAdult(f)), [f, isKid])
+  const goalSent = useRef(false) // цель раз за визит, как на старом сайте
+  useEffect(() => {
+    if (!goalSent.current && !("message" in r) && r.size) { goalSent.current = true; reachGoal("sizefinder_used", { mode: isKid ? "kids" : "adult", size: r.size }) }
+  }, [r, isKid])
   const sel = "h-11 rounded-lg border border-oh-line-2 bg-white px-3 text-[15px] text-oh-ink focus:border-oh-azure focus:outline-none"
 
   return (

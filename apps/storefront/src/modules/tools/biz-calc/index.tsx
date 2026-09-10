@@ -7,6 +7,7 @@ import ProductPicker from "@/modules/tools/product-picker"
 import { clx } from "@medusajs/ui"
 import { useParams, useRouter } from "next/navigation"
 import { useMemo, useState } from "react"
+import { reachGoal } from "@/lib/util/metrika"
 
 /**
  * Калькулятор экономики закупки («Бизнес с Оханой»): позиции из каталога, регион, канал продаж,
@@ -74,6 +75,7 @@ const BizCalc = () => {
     try {
       const lineItems = items.flatMap((it) => spreadBySizes(it, it.qty))
       if (lineItems.length) await addToCartBulk({ lineItems, countryCode })
+      reachGoal("bizcalc_add_to_cart", { items: items.length, qty: r?.qtyTotal, sum: r ? Math.round(r.purchase) : undefined })
       router.push(`/${countryCode}/cart`)
     } catch (e: any) {
       alert(e?.message || "Не получилось добавить в корзину")

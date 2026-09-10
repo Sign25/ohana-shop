@@ -1,4 +1,5 @@
 import { retrieveOrder } from "@/lib/data/orders"
+import EcPurchase from "@/modules/analytics/ec-purchase"
 import OrderCompletedTemplate from "@/modules/order/templates/order-completed-template"
 import { B2BOrder } from "@/types/global"
 import { Metadata } from "next"
@@ -21,5 +22,10 @@ export default async function OrderConfirmedPage(props: Props) {
     return notFound()
   }
 
-  return <OrderCompletedTemplate order={order} />
+  return (
+    <>
+      <EcPurchase order={order as any} />
+      <OrderCompletedTemplate order={order} />
+    </>
+  )
 }
