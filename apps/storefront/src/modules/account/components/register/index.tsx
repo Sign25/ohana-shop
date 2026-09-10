@@ -5,6 +5,7 @@ import { LOGIN_VIEW } from "@/modules/account/templates/login-template"
 import ErrorMessage from "@/modules/checkout/components/error-message"
 import { SubmitButton } from "@/modules/checkout/components/submit-button"
 import Input from "@/modules/common/components/input"
+import LocalizedClientLink from "@/modules/common/components/localized-client-link"
 import { HttpTypes } from "@medusajs/types"
 import { Checkbox, Text } from "@medusajs/ui"
 import { ChangeEvent, useActionState, useState } from "react"
@@ -49,7 +50,7 @@ const Register = ({ setCurrentView }: Props) => {
           <Checkbox checked={terms} onCheckedChange={(v) => setTerms(!!v)} data-testid="terms-checkbox" />
           <span>
             Согласен с{" "}
-            <a href="https://ohanaopt.ru/privacy/" target="_blank" rel="noreferrer" className="underline hover:text-oh-azure">политикой обработки персональных данных</a>{" "}
+            <LocalizedClientLink href="/p/privacy-policy" className="underline hover:text-oh-azure">политикой обработки персональных данных</LocalizedClientLink>{" "}
             и условиями оптовых поставок.
           </span>
         </label>

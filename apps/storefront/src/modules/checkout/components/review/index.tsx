@@ -3,6 +3,7 @@
 import { checkSpendingLimit } from "@/lib/util/check-spending-limit"
 import { formatRub, OPT_THRESHOLD } from "@/lib/util/ohana"
 import PaymentButton from "@/modules/checkout/components/payment-button"
+import LocalizedClientLink from "@/modules/common/components/localized-client-link"
 import { B2BCart, B2BCustomer } from "@/types"
 
 const Review = ({ cart, customer }: { cart: B2BCart; customer: B2BCustomer | null }) => {
@@ -13,9 +14,9 @@ const Review = ({ cart, customer }: { cart: B2BCart; customer: B2BCustomer | nul
     <div className="flex flex-col gap-y-3">
       <p className="text-[11px] leading-relaxed text-oh-muted">
         Нажимая «Оформить заказ», вы соглашаетесь с{" "}
-        <a href="https://ohanaopt.ru/faq/" target="_blank" rel="noreferrer" className="underline hover:text-oh-azure">условиями оптовых поставок</a>{" "}
+        <LocalizedClientLink href="/p/conditions" className="underline hover:text-oh-azure">условиями оптовых поставок</LocalizedClientLink>{" "}
         и{" "}
-        <a href="https://ohanaopt.ru/privacy/" target="_blank" rel="noreferrer" className="underline hover:text-oh-azure">политикой обработки персональных данных</a>.
+        <LocalizedClientLink href="/p/privacy-policy" className="underline hover:text-oh-azure">политикой обработки персональных данных</LocalizedClientLink>.
         Заказ берётся в работу после оплаты счёта.
       </p>
       {belowMin ? (

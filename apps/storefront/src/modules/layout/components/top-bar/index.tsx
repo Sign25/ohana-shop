@@ -1,3 +1,4 @@
+import LocalizedClientLink from "@/modules/common/components/localized-client-link"
 import Image from "next/image"
 
 /**
@@ -14,8 +15,8 @@ const TopBar = () => {
   return (
     <div className="hidden small:block bg-oh-paper border-b border-oh-line text-[12px] text-oh-graphite">
       <div className="content-container flex items-center justify-between gap-4 py-1.5">
-        <a
-          href="https://ohanaopt.ru/about/nagrady/"
+        <LocalizedClientLink
+          href="/p/nagrady"
           className="inline-flex items-center gap-2 rounded-pill border border-oh-line bg-white px-3 py-1 hover:border-oh-azure hover:text-oh-azure"
           title="Награды Ohana"
         >
@@ -24,7 +25,7 @@ const TopBar = () => {
           <span className="text-oh-muted">·</span>
           <Image src="/ui/award_brand.webp" alt="Бренд года" width={16} height={16} />
           <span className="font-medium">Бренд года 2025</span>
-        </a>
+        </LocalizedClientLink>
 
         <nav className="flex items-center gap-2">
           {SERVICES.map((s) => (

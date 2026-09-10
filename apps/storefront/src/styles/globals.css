@@ -67,6 +67,17 @@
     @apply mb-1;
   }
 
+  /* Перенесённые страницы: их HTML пришёл из CS-Cart со своими стилями, здесь только базовые правила */
+  .oh-page img { @apply h-auto max-w-full rounded-lg; }
+  .oh-page h1, .oh-page h2, .oh-page h3 { @apply mb-3 mt-6 font-semibold text-oh-ink; }
+  .oh-page h1 { @apply text-[26px]; }
+  .oh-page h2 { @apply text-[20px]; }
+  .oh-page h3 { @apply text-[16px]; }
+  .oh-page a { @apply text-oh-azure underline decoration-oh-azure/30 hover:decoration-oh-azure; }
+  .oh-page table { @apply my-4 w-full text-[13px]; }
+  .oh-page td, .oh-page th { @apply border-b border-oh-line px-2 py-1.5 text-left align-top; }
+  .oh-page iframe { @apply w-full rounded-lg; }
+
   /* --- утилиты стартера, на них завязаны существующие компоненты --- */
   .content-container { @apply max-w-[1440px] w-full mx-auto px-6; }
   .contrast-btn { @apply px-4 py-2 border border-black rounded-full hover:bg-black hover:text-white transition-colors duration-200 ease-in; }

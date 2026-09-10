@@ -1,3 +1,5 @@
+import LocalizedClientLink from "@/modules/common/components/localized-client-link"
+
 const Help = () => {
   return (
     <div className="mt-6 rounded-card bg-oh-paper p-4 text-[13px] text-oh-graphite">
@@ -7,7 +9,7 @@ const Help = () => {
         <a href="mailto:info@ohanamarket.ru" className="hover:text-oh-azure">info@ohanamarket.ru</a>
       </div>
       <div className="mt-1">
-        <a href="https://ohanaopt.ru/return/" className="underline hover:text-oh-azure">Возврат и обмен</a> · <a href="https://ohanaopt.ru/faq/" className="underline hover:text-oh-azure">Вопросы и ответы</a>
+        <LocalizedClientLink href="/p/return" className="underline hover:text-oh-azure">Возврат и обмен</LocalizedClientLink> · <LocalizedClientLink href="/p/faq" className="underline hover:text-oh-azure">Вопросы и ответы</LocalizedClientLink>
       </div>
     </div>
   )

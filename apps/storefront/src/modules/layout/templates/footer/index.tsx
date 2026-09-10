@@ -4,17 +4,23 @@ import Image from "next/image"
 
 /** Служебные страницы пока живут на старом сайте — ссылки временные, до переноса разделов. */
 const BUYERS = [
-  { label: "Как начать работать", href: "https://ohanaopt.ru/biznes-s-ohanoy/" },
-  { label: "Доставка и оплата", href: "https://ohanaopt.ru/faq/" },
-  { label: "Возврат и обмен", href: "https://ohanaopt.ru/return/" },
-  { label: "Вопросы и ответы", href: "https://ohanaopt.ru/faq/" },
+  { label: "Как сделать заказ", href: "/p/how-to-order" },
+  { label: "Условия работы", href: "/p/conditions" },
+  { label: "Доставка", href: "/p/delivery" },
+  { label: "Оплата", href: "/p/payment" },
+  { label: "Возврат и обмен", href: "/p/return" },
+  { label: "Вопросы и ответы", href: "/p/faq" },
   { label: "Подбор размера", href: "https://ohanaopt.ru/podbor-razmera/" },
-  { label: "Совместные покупки", href: "https://ohanaopt.ru/sovmestnye-pokupki/" },
+  { label: "Бизнес с Оханой", href: "https://ohanaopt.ru/biznes-s-ohanoy/" },
 ]
 const COMPANY = [
-  { label: "О компании", href: "https://ohanaopt.ru/about/" },
-  { label: "Награды", href: "https://ohanaopt.ru/about/nagrady/" },
-  { label: "Контакты", href: "https://ohanaopt.ru/contacts/" },
+  { label: "О компании", href: "/p/about" },
+  { label: "Награды", href: "/p/nagrady" },
+  { label: "Сертификаты", href: "/p/sertificat" },
+  { label: "Реквизиты", href: "/p/requisites" },
+  { label: "Контакты", href: "/p/contacts" },
+  { label: "Договор-оферта", href: "/p/oferta" },
+  { label: "Политика конфиденциальности", href: "/p/privacy-policy" },
   { label: "Розничный магазин", href: "https://ohana.market/" },
 ]
 
@@ -57,7 +63,11 @@ export default async function Footer() {
           <ul className="flex flex-col gap-1.5 text-[13px]">
             {BUYERS.map((l) => (
               <li key={l.label}>
-                <a href={l.href} className="text-oh-graphite hover:text-oh-azure">{l.label}</a>
+                {l.href.startsWith("/") ? (
+                  <LocalizedClientLink href={l.href} className="text-oh-graphite hover:text-oh-azure">{l.label}</LocalizedClientLink>
+                ) : (
+                  <a href={l.href} className="text-oh-graphite hover:text-oh-azure">{l.label}</a>
+                )}
               </li>
             ))}
           </ul>
@@ -68,7 +78,11 @@ export default async function Footer() {
           <ul className="flex flex-col gap-1.5 text-[13px]">
             {COMPANY.map((l) => (
               <li key={l.label}>
-                <a href={l.href} className="text-oh-graphite hover:text-oh-azure">{l.label}</a>
+                {l.href.startsWith("/") ? (
+                  <LocalizedClientLink href={l.href} className="text-oh-graphite hover:text-oh-azure">{l.label}</LocalizedClientLink>
+                ) : (
+                  <a href={l.href} className="text-oh-graphite hover:text-oh-azure">{l.label}</a>
+                )}
               </li>
             ))}
           </ul>
