@@ -2,7 +2,6 @@
 
 import { useCart } from "@/lib/context/cart-context"
 import { formatRub } from "@/lib/util/ohana"
-import AddNoteButton from "@/modules/cart/components/add-note-button"
 import DeleteButton from "@/modules/common/components/delete-button"
 import LocalizedClientLink from "@/modules/common/components/localized-client-link"
 import { HttpTypes } from "@medusajs/types"
@@ -45,7 +44,7 @@ const ItemFull = ({ item, showBorders = true, disabled }: ItemProps) => {
         <LocalizedClientLink href={`/products/${item.product_handle}`} className="line-clamp-2 text-[13.5px] font-medium text-oh-ink hover:text-oh-azure">
           {item.product?.title || item.title}
         </LocalizedClientLink>
-        <div className="text-[12px] text-oh-muted">
+        <div className="text-[12.5px] text-oh-graphite">
           {item.variant?.sku && <span>Арт. {item.variant.sku} · </span>}
           {item.variant?.title}
         </div>
@@ -58,7 +57,7 @@ const ItemFull = ({ item, showBorders = true, disabled }: ItemProps) => {
         </div>
         <div className="mt-1 flex flex-wrap items-center gap-2">
           <div className="flex items-center rounded-pill border border-oh-line">
-            <button type="button" onClick={() => change(item.quantity - step)} disabled={disabled} className="h-7 w-7 text-oh-graphite hover:text-oh-azure disabled:opacity-40" aria-label="Меньше">−</button>
+            <button type="button" onClick={() => change(item.quantity - step)} disabled={disabled} className="h-10 w-10 text-oh-graphite hover:text-oh-azure disabled:opacity-40" aria-label="Меньше">−</button>
             <input
               type="number"
               value={quantity}
@@ -68,17 +67,17 @@ const ItemFull = ({ item, showBorders = true, disabled }: ItemProps) => {
               onChange={(e) => setQuantity(e.target.value)}
               onBlur={(e) => change(Number(e.target.value) || 0)}
               onKeyDown={(e) => e.key === "Enter" && change(Number(quantity) || 0)}
-              className="h-7 w-14 border-x border-oh-line bg-transparent text-center text-[13px] text-oh-ink [appearance:textfield] focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              inputMode="numeric"
+              className="h-10 w-16 border-x border-oh-line bg-transparent text-center text-[14px] text-oh-ink [appearance:textfield] focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
             />
-            <button type="button" onClick={() => change(item.quantity + step)} disabled={disabled || item.quantity + step > max} className="h-7 w-7 text-oh-graphite hover:text-oh-azure disabled:opacity-40" aria-label="Больше">+</button>
+            <button type="button" onClick={() => change(item.quantity + step)} disabled={disabled || item.quantity + step > max} className="h-10 w-10 text-oh-graphite hover:text-oh-azure disabled:opacity-40" aria-label="Больше">+</button>
           </div>
           <DeleteButton id={item.id} disabled={disabled} />
-          <AddNoteButton item={item as HttpTypes.StoreCartLineItem} disabled={disabled} />
         </div>
       </div>
       <div className="hidden shrink-0 text-right small:block">
         <div className="text-[15px] font-semibold text-oh-ink">{formatRub((item.total ?? item.unit_price * item.quantity) as number)}</div>
-        <div className="text-[11px] text-oh-muted">{item.quantity} шт</div>
+        <div className="text-[12px] text-oh-muted">{item.quantity} шт</div>
       </div>
     </div>
   )

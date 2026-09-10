@@ -81,7 +81,7 @@ const CatalogMenu = ({ categories }: { categories: Cat[] }) => {
               ))}
               {showcases.length > 0 && (
                 <li className="mt-2 border-t border-oh-line px-5 pt-3">
-                  <div className="mb-1 text-[11px] uppercase tracking-wider text-oh-muted">Подборки</div>
+                  <div className="mb-1 text-[13px] font-medium text-oh-graphite">Подборки</div>
                   <div className="flex flex-wrap gap-1.5">
                     {showcases.map((c) => (
                       <LocalizedClientLink key={c.id} href={`/categories/${c.handle}`} className="oh-chip !px-2.5 !py-1 !text-[12px]">

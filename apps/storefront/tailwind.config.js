@@ -37,7 +37,7 @@ module.exports = {
           "primary-light": "#F87A66",
           graphite: "#4A4A4A",
           ink: "#3A3A3A",
-          muted: "#8A8178",
+          muted: "#6F6A64",
           beige: "#F5E9D3",
           cream: "#F7EDE1",
           paper: "#FBF8F3",

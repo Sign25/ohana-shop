@@ -27,9 +27,9 @@ const CartTotals: React.FC = () => {
           <span className="text-oh-azure" data-testid="cart-discount">− {money(discount_total)}</span>
         </div>
       )}
-      <div className="flex justify-between">
-        <span>Доставка</span>
-        <span data-testid="cart-shipping">{shipping_total ? money(shipping_total) : "до терминала ТК в Омске бесплатно"}</span>
+      <div className="flex justify-between gap-4">
+        <span className="shrink-0">Доставка</span>
+        <span className="text-right" data-testid="cart-shipping">{shipping_total ? money(shipping_total) : "до терминала ТК в Омске — бесплатно"}</span>
       </div>
       <Divider className="my-1" />
       <div className="flex items-center justify-between text-oh-ink">

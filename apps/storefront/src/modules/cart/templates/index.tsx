@@ -29,7 +29,7 @@ const CartTemplate = ({ customer }: { customer: B2BCustomer | null }) => {
               <div className="flex flex-col gap-y-2">
                 {!customer && <SignInPrompt />}
                 {cart?.approvals && cart.approvals.length > 0 && <ApprovalStatusBanner cart={cart} />}
-                <ItemsTemplate cart={cart} />
+                <ItemsTemplate cart={cart} showTotal={false} />
               </div>
               <div className="relative">
                 <div className="sticky top-40 flex flex-col gap-y-8">

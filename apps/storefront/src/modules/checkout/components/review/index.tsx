@@ -12,7 +12,7 @@ const Review = ({ cart, customer }: { cart: B2BCart; customer: B2BCustomer | nul
 
   return (
     <div className="flex flex-col gap-y-3">
-      <p className="text-[11px] leading-relaxed text-oh-muted">
+      <p className="text-[12px] leading-relaxed text-oh-muted">
         Нажимая «Оформить заказ», вы соглашаетесь с{" "}
         <LocalizedClientLink href="/p/conditions" className="underline hover:text-oh-azure">условиями оптовых поставок</LocalizedClientLink>{" "}
         и{" "}

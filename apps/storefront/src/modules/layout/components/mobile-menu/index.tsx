@@ -72,7 +72,7 @@ const MobileMenu = ({ categories }: { categories: Cat[] }) => {
               </ul>
               {showcases.length > 0 && (
                 <div className="px-4 py-3">
-                  <div className="mb-2 text-[11px] uppercase tracking-wider text-oh-muted">Подборки</div>
+                  <div className="mb-2 text-[13px] font-medium text-oh-graphite">Подборки</div>
                   <div className="flex flex-wrap gap-1.5">
                     <LocalizedClientLink href="/store" className="oh-chip !py-1 !text-[12px]">Новинки</LocalizedClientLink>
                     {showcases.map((c) => (

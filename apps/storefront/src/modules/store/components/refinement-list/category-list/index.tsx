@@ -74,7 +74,7 @@ const CategoryList = ({ categories, currentCategory }: { categories: Cat[]; curr
       </ul>
       {showcases.length > 0 && (
         <div className="border-t border-oh-line px-4 py-3">
-          <div className="mb-2 text-[11px] uppercase tracking-wider text-oh-muted">Подборки</div>
+          <div className="mb-2 text-[13px] font-medium text-oh-graphite">Подборки</div>
           <div className="flex flex-wrap gap-1.5">
             {showcases.map((c) => (
               <LocalizedClientLink

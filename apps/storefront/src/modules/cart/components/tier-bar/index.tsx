@@ -19,16 +19,18 @@ const TierBar = ({ cart, compact }: { cart: any; compact?: boolean }) => {
   const isKrupny = base >= KRUPNY_THRESHOLD
   const isOpt = base >= OPT_THRESHOLD
 
+  const paid = cart.items.reduce((acc: number, i: any) => acc + Number(i.unit_price) * i.quantity, 0)
+  const saving = Math.max(0, base - paid)
   let text: string
-  if (isKrupny) text = "Действует цена крупного опта"
+  if (isKrupny) text = saving > 0 ? `Цена крупного опта: вы экономите ${formatRub(saving)}` : "Действует цена крупного опта"
   else if (isOpt) text = `До крупного опта ещё ${formatRub(KRUPNY_THRESHOLD - base)}`
   else text = `До минимального заказа ещё ${formatRub(OPT_THRESHOLD - base)}`
 
   return (
-    <div className={clx("flex flex-col gap-1.5", compact ? "text-[11px]" : "text-[12px]")} title="Опт от 35 000 ₽ · крупный опт от 100 000 ₽">
+    <div className={clx("flex flex-col gap-1.5", compact ? "text-[12px]" : "text-[12px]")} title="Опт от 35 000 ₽ · крупный опт от 100 000 ₽">
       <div className="flex items-center justify-between">
         <span className={clx("font-medium", isKrupny ? "text-oh-azure" : isOpt ? "text-oh-ink" : "text-oh-primary")}>{text}</span>
-        <span className="text-oh-muted">{formatRub(base)}</span>
+        <span className="text-oh-graphite">{formatRub(base)} по опту</span>
       </div>
       <div className="relative h-1.5 w-full overflow-hidden rounded-pill bg-oh-line">
         <div
@@ -38,7 +40,7 @@ const TierBar = ({ cart, compact }: { cart: any; compact?: boolean }) => {
         <div className="absolute inset-y-0 w-px bg-white/90" style={{ left: `${optPct}%` }} />
       </div>
       {!compact && (
-        <div className="flex justify-between text-[10px] uppercase tracking-wider text-oh-muted">
+        <div className="flex justify-between text-[12px] text-oh-graphite">
           <span>0</span>
           <span style={{ marginLeft: `${optPct - 8}%` }}>опт {formatRub(OPT_THRESHOLD)}</span>
           <span>крупный опт {formatRub(KRUPNY_THRESHOLD)}</span>

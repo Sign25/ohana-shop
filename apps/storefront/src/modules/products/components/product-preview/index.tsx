@@ -18,12 +18,13 @@ export default async function ProductPreview({
   if (!product) return null
   const s = productSummary(product)
   const img = product.thumbnail || product.images?.[0]?.url
+  // подпись о наличии только когда есть что сказать: распродано или ряд неполный
   const stockLabel =
     s.stock <= 0
       ? "Нет в наличии"
       : s.inStockSizes < s.sizesTotal
-      ? `${s.inStockSizes} из ${s.sizesTotal} ${plural(s.sizesTotal, "размера", "размеров", "размеров")}`
-      : "Все размеры в наличии"
+      ? `в наличии ${s.inStockSizes} из ${s.sizesTotal} ${plural(s.sizesTotal, "размера", "размеров", "размеров")}`
+      : ""
 
   return (
     <LocalizedClientLink href={`/products/${product.handle}`} className="group block h-full" data-testid="product-wrapper">
@@ -42,18 +43,18 @@ export default async function ProductPreview({
             <div className="absolute inset-0 flex items-center justify-center text-oh-muted text-xs">нет фото</div>
           )}
           {s.stock <= 0 && (
-            <span className="absolute left-3 top-3 rounded-pill bg-white/90 px-2.5 py-1 text-[11px] font-medium text-oh-graphite">
+            <span className="absolute left-3 top-3 rounded-pill bg-white/90 px-2.5 py-1 text-[12px] font-medium text-oh-graphite">
               Всё разобрали
             </span>
           )}
           {s.packUnit && s.packUnit !== "N" && (
-            <span className="absolute right-3 top-3 rounded-pill bg-oh-mint-deep px-2.5 py-1 text-[11px] font-medium text-white">
+            <span className="absolute right-3 top-3 rounded-pill bg-oh-mint-deep px-2.5 py-1 text-[12px] font-medium text-white">
               Упаковка
             </span>
           )}
         </div>
         <div className="flex flex-1 flex-col gap-1.5 p-3.5">
-          {s.code && <div className="text-[11px] tracking-wide text-oh-muted">Арт. {s.code}</div>}
+          {s.code && <div className="text-[12px] text-oh-muted">Арт. {s.code}</div>}
           <div className="line-clamp-2 min-h-[2.6em] text-[13.5px] font-medium leading-snug text-oh-ink" data-testid="product-title">
             {product.title}
           </div>
@@ -66,18 +67,20 @@ export default async function ProductPreview({
               <div className="text-sm text-oh-muted">цена по запросу</div>
             )}
             {s.minKrupny !== null && s.minKrupny < (s.minPrice ?? Infinity) && (
-              <div className="text-[12px] text-oh-azure">
+              <div className="text-[13px] text-oh-azure">
                 крупный опт от {formatRub(s.minKrupny)}
               </div>
             )}
           </div>
-          <div className="flex items-center justify-between gap-2 pt-1 text-[11.5px]">
-            <span className={clx("flex items-center gap-1.5", s.stock > 0 ? "text-oh-graphite" : "text-oh-muted")}>
-              <span className={clx("inline-block h-1.5 w-1.5 rounded-full", s.stock > 0 ? "bg-oh-mint-deep" : "bg-oh-line-2")} />
-              {stockLabel}
-            </span>
-            {s.packQty && s.packQty > 1 && <span className="text-oh-muted">упак. {s.packQty} шт</span>}
-          </div>
+          {(stockLabel || (s.packQty && s.packQty > 1)) && (
+            <div className="flex items-center justify-between gap-2 pt-1 text-[12.5px]">
+              <span className={clx("flex items-center gap-1.5", s.stock > 0 ? "text-oh-graphite" : "text-oh-muted")}>
+                {stockLabel && <span className={clx("inline-block h-1.5 w-1.5 rounded-full", s.stock > 0 ? "bg-oh-gold" : "bg-oh-line-2")} />}
+                {stockLabel}
+              </span>
+              {s.packQty && s.packQty > 1 && <span className="text-oh-graphite">упаковка {s.packQty} шт</span>}
+            </div>
+          )}
         </div>
       </div>
     </LocalizedClientLink>

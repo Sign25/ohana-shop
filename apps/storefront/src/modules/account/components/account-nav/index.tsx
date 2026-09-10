@@ -42,7 +42,7 @@ const AccountNav = ({ customer, numPendingApprovals }: { customer: B2BCustomer |
               className={clx("flex items-center justify-between rounded-lg px-3 py-2 text-[14px]", isActive(it.href, it.exact) ? "bg-oh-paper font-medium text-oh-azure" : "text-oh-ink hover:bg-oh-paper")}
             >
               {it.label}
-              {!!it.badge && <span className="rounded-pill bg-oh-primary px-1.5 text-[11px] text-white">{it.badge}</span>}
+              {!!it.badge && <span className="rounded-pill bg-oh-primary px-1.5 text-[12px] text-white">{it.badge}</span>}
             </LocalizedClientLink>
           </li>
         ))}

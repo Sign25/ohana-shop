@@ -47,7 +47,7 @@ export default async function CheckoutForm({
           </Button>
         </LocalizedClientLink>
 
-        {!customer ? <SignInPrompt /> : null}
+        {!customer ? <SignInPrompt checkout /> : null}
 
         {cart.approval_status &&
           cart.approval_status.status !== ApprovalStatusType.APPROVED && (

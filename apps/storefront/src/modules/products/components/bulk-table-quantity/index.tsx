@@ -9,11 +9,13 @@ type BulkTableQuantityProps = {
   step?: number
   /** доступный остаток; 0 — размер закончился */
   max?: number
+  /** стартовое значение (быстрая заливка ряда) */
+  initial?: number
 }
 
 /** Счётчик количества в таблице размеров: шаг = упаковка, Shift — ×10 шагов, не больше остатка */
-const BulkTableQuantity = ({ variantId, onChange, step = 1, max }: BulkTableQuantityProps) => {
-  const [quantity, setQuantity] = useState("0")
+const BulkTableQuantity = ({ variantId, onChange, step = 1, max, initial = 0 }: BulkTableQuantityProps) => {
+  const [quantity, setQuantity] = useState(String(initial || 0))
   const [shiftPressed, setShiftPressed] = useState(false)
   const s = Math.max(1, step || 1)
   const limit = typeof max === "number" ? Math.max(0, max) : Infinity
@@ -54,7 +56,7 @@ const BulkTableQuantity = ({ variantId, onChange, step = 1, max }: BulkTableQuan
 
   return (
     <div className="flex w-full flex-row items-center justify-between gap-1">
-      <IconButton onClick={handleSubtract} disabled={soldOut || Number(quantity) <= 0} className="rounded-full hover:bg-oh-paper" variant="transparent" aria-label="Меньше">
+      <IconButton onClick={handleSubtract} disabled={soldOut || Number(quantity) <= 0} className="!h-11 !w-11 rounded-full hover:bg-oh-paper" variant="transparent" aria-label="Меньше">
         <MinusMini />
       </IconButton>
       <Input
@@ -67,9 +69,10 @@ const BulkTableQuantity = ({ variantId, onChange, step = 1, max }: BulkTableQuan
         step={s}
         disabled={soldOut}
         title={soldOut ? "Размер закончился" : s > 1 ? `Кратно ${s} шт` : undefined}
-        className="max-w-12 items-center justify-center text-center [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+        inputMode="numeric"
+        className="!h-11 max-w-14 items-center justify-center text-center text-[15px] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
       />
-      <IconButton onClick={handleAdd} disabled={soldOut || Number(quantity) + s > limit} className="rounded-full hover:bg-oh-paper" variant="transparent" aria-label="Больше">
+      <IconButton onClick={handleAdd} disabled={soldOut || Number(quantity) + s > limit} className="!h-11 !w-11 rounded-full hover:bg-oh-paper" variant="transparent" aria-label="Больше">
         <PlusMini />
       </IconButton>
     </div>

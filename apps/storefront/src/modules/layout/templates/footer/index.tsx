@@ -46,7 +46,7 @@ export default async function Footer() {
         </div>
 
         <div>
-          <div className="mb-3 text-[12px] font-semibold uppercase tracking-wider text-oh-ink">Каталог</div>
+          <div className="mb-3 text-[14px] font-semibold text-oh-ink">Каталог</div>
           <ul className="flex flex-col gap-1.5 text-[13px]">
             {roots.map((c) => (
               <li key={c.id}>
@@ -59,7 +59,7 @@ export default async function Footer() {
         </div>
 
         <div>
-          <div className="mb-3 text-[12px] font-semibold uppercase tracking-wider text-oh-ink">Покупателям</div>
+          <div className="mb-3 text-[14px] font-semibold text-oh-ink">Покупателям</div>
           <ul className="flex flex-col gap-1.5 text-[13px]">
             {BUYERS.map((l) => (
               <li key={l.label}>
@@ -74,7 +74,7 @@ export default async function Footer() {
         </div>
 
         <div>
-          <div className="mb-3 text-[12px] font-semibold uppercase tracking-wider text-oh-ink">Компания</div>
+          <div className="mb-3 text-[14px] font-semibold text-oh-ink">Компания</div>
           <ul className="flex flex-col gap-1.5 text-[13px]">
             {COMPANY.map((l) => (
               <li key={l.label}>
