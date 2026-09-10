@@ -13,6 +13,11 @@ export default defineMiddlewares({
     ...adminMiddlewares,
     ...storeMiddlewares,
     {
+      // обмен с 1С: файлы приходят сырым потоком, парсер тела отключён
+      matcher: "/commerceml",
+      bodyParser: false,
+    },
+    {
       // минимальный оптовый заказ 35 000 ₽ (см. lib/ohana.ts)
       matcher: "/store/carts/:id/complete",
       method: ["POST"],

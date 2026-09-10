@@ -53,6 +53,13 @@ PNG-копии весили 1–3 МБ (4,4 ГБ на 3146 файлов) и то
 ## WebMCP (инструменты для браузерных агентов)
 `src/modules/webmcp/index.tsx` регистрирует в `document.modelContext` (или `navigator.modelContext`) инструменты: `get_wholesale_terms`, `search_products`, `get_cart`, `add_to_cart` (только с `confirm: true`, показывает уведомление), `open_page`. Оформление заказа агенту не отдаётся. Для ручной проверки те же функции — `window.__ohanaTools` в консоли.
 
+## Приём обмена от 1С напрямую (`/commerceml`)
+Маршрут `apps/backend/src/api/commerceml/route.ts` (логика в `src/lib/onec-exchange.ts`) говорит по протоколу «Обмен с сайтом» как CS-Cart: `type=catalog` — checkauth (Basic-auth) → init (`zip=no`, файлы до 50 МБ частями) → file (в `/srv/ohana/shared/cml/inbox/…`) → import (xml копируется в рабочий каталог; после `offers*.xml` картинки переносятся в `import_files/` и в фоне запускается `cml-nightly.sh --no-rsync`); `type=sale` — query отдаёт XML заказов без `metadata.onec_exported_at` (Ид товара = GUID «номенклатура#характеристика», реквизиты для счёта, комментарий), success помечает их выгруженными, file принимает статусы из 1С (`Номер по 1С`, `Статус заказа` → `order.metadata.onec_*`).
+- Логин/пароль: `ONEC_EXCHANGE_LOGIN` / `ONEC_EXCHANGE_PASSWORD` в `apps/backend/.env` (копия в `/root/ohana-shop-credentials.txt`). Лог: `/srv/ohana/logs/commerceml.log` (МСК).
+- Адрес для узла: сейчас `https://api.ohanaopt.ru/commerceml` или `https://new.ohanaopt.ru/commerceml` (Caddy проксирует `/commerceml*` на бэкенд и на домене витрины, чтобы после переезда домена адрес был `https://ohanaopt.ru/commerceml`, как у старого сайта).
+- **Переключение при запуске:** в 1С в узлах 000000005 (опт) и 000000007 («Номенклатура 2026») поменять адрес, логин и пароль; включить регламентные задания (расписание «каждый день», см. память ohana-1c-exchange-nodes). Копирование с опта по rsync после этого можно убрать из cron (строка `20 4 * * *` — оставить `cml-nightly.sh --no-rsync` не нужно: конвейер запустится сам после приёма файлов).
+- Проверка руками: `curl -u onec:… "https://api.ohanaopt.ru/commerceml?type=catalog&mode=checkauth"` → `success` + кука.
+
 ## Правила опта (бэкенд)
 - `src/lib/ohana.ts` — пороги 35 000 ₽ (минимальный заказ) и 100 000 ₽ (крупный опт).
 - `POST /store/carts/:id/ohana-tier` — пересчёт корзины на цены крупного опта (витрина зовёт после каждого изменения корзины, `lib/data/cart.ts → ohanaRetier`).
