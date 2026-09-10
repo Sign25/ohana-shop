@@ -50,7 +50,8 @@ function translit(s: string): string {
   return s.toLowerCase().split("").map((c) => m[c] ?? c).join("").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")
 }
 const num = (v: any) => { const n = parseFloat(String(v ?? "").replace(/\s| /g, "").replace(",", ".")); return isNaN(n) ? 0 : n }
-const webUrl = (rel: string) => IMG_BASE + rel.replace(/^import_files\//, "")
+const webRel = (rel: string) => rel.replace(/^import_files\//, "").replace(/\.png$/i, ".jpg") // веб-копии PNG хранятся как JPEG
+const webUrl = (rel: string) => IMG_BASE + webRel(rel)
 
 export default async function importCml({ container, args }: ExecArgs) {
   const logger = container.resolve(ContainerRegistrationKeys.LOGGER)
@@ -189,7 +190,7 @@ export default async function importCml({ container, args }: ExecArgs) {
   }
 
   const stat = { newProducts: 0, newVariants: 0, updated: 0, imagesAdded: 0, skippedOutOfSite: 0 }
-  const imgOk = (rel: string) => fs.existsSync(path.join(WEB_DIR, rel.replace(/^import_files\//, "")))
+  const imgOk = (rel: string) => fs.existsSync(path.join(WEB_DIR, webRel(rel)))
   let processed = 0
 
   for (const [nom, group] of byNom) {

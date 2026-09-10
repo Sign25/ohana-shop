@@ -44,6 +44,9 @@ cd ../storefront && sudo -u ohana -H npx next build && systemctl restart ohana-s
 Проверка перед реальным прогоном: `sudo -u ohana -H npx medusa exec ./src/scripts/import-commerceml.ts dry`.
 При переключении 1С на новый сайт шаг 1 заменяется приёмом CommerceML напрямую (маршрут ещё не написан).
 
+## Фото: только JPEG в веб-копиях
+PNG-копии весили 1–3 МБ (4,4 ГБ на 3146 файлов) и тормозили каталог, поэтому все веб-копии — JPEG q82 на белом фоне (`resize-images.mjs`, `resize-cml.mjs`, разовый `convert-png.mjs`; ссылки в `image.url`/`product.thumbnail` переключены с `.png` на `.jpg` 10.09.2026). Оригиналы PNG остаются в `detailed/` и `cml/import_files`. `trim-padding.mjs <handle категории> [dry]` обрезает белые/прозрачные поля у фото раздела (нужно было сокам).
+
 ## Правила опта (бэкенд)
 - `src/lib/ohana.ts` — пороги 35 000 ₽ (минимальный заказ) и 100 000 ₽ (крупный опт).
 - `POST /store/carts/:id/ohana-tier` — пересчёт корзины на цены крупного опта (витрина зовёт после каждого изменения корзины, `lib/data/cart.ts → ohanaRetier`).
