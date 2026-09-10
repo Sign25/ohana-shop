@@ -48,7 +48,10 @@ cd ../storefront && sudo -u ohana -H npx next build && systemctl restart ohana-s
 PNG-копии весили 1–3 МБ (4,4 ГБ на 3146 файлов) и тормозили каталог, поэтому все веб-копии — JPEG q82 на белом фоне (`resize-images.mjs`, `resize-cml.mjs`, разовый `convert-png.mjs`; ссылки в `image.url`/`product.thumbnail` переключены с `.png` на `.jpg` 10.09.2026). Оригиналы PNG остаются в `detailed/` и `cml/import_files`. `trim-padding.mjs <handle категории> [dry]` обрезает белые/прозрачные поля у фото раздела (нужно было сокам).
 
 ## Яндекс.Метрика
-Счётчик подключается только при  в  (при запуске вписать счётчик опта 102279069 и пересобрать витрину). Пока пусто — тестовый трафик в статистику не попадает. Ecommerce через dataLayer: detail (карточка), add/remove (корзина), purchase (страница «заказ оформлен», без дублей); цели ,  — создать в счётчике после включения. Код: , .
+Счётчик подключается только при `NEXT_PUBLIC_METRIKA_ID` в `apps/storefront/.env` (при запуске вписать счётчик опта 102279069 и пересобрать витрину). Пока пусто — тестовый трафик в статистику не попадает. Ecommerce через dataLayer: detail (карточка), add/remove (корзина), purchase (страница «заказ оформлен», без дублей); цели `sizefinder_used`, `bizcalc_add_to_cart` — создать в счётчике после включения. Код: `src/lib/util/metrika.ts`, `src/modules/analytics/*`.
+
+## WebMCP (инструменты для браузерных агентов)
+`src/modules/webmcp/index.tsx` регистрирует в `document.modelContext` (или `navigator.modelContext`) инструменты: `get_wholesale_terms`, `search_products`, `get_cart`, `add_to_cart` (только с `confirm: true`, показывает уведомление), `open_page`. Оформление заказа агенту не отдаётся. Для ручной проверки те же функции — `window.__ohanaTools` в консоли.
 
 ## Правила опта (бэкенд)
 - `src/lib/ohana.ts` — пороги 35 000 ₽ (минимальный заказ) и 100 000 ₽ (крупный опт).

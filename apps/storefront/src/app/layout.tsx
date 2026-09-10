@@ -1,5 +1,6 @@
 import { getBaseURL } from "@/lib/util/env"
 import Metrika from "@/modules/analytics/metrika"
+import WebMcp from "@/modules/webmcp"
 import { Toaster } from "@medusajs/ui"
 import { Metadata } from "next"
 import { Montserrat } from "next/font/google"
@@ -31,6 +32,7 @@ export default function RootLayout(props: { children: React.ReactNode }) {
         <main className="relative">{props.children}</main>
         <Toaster className="z-[99999]" position="bottom-left" />
         <Suspense fallback={null}><Metrika /></Suspense>
+        <WebMcp />
       </body>
     </html>
   )
