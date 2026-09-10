@@ -77,7 +77,7 @@ const ProductVariantsTable = ({
         <Table className="w-full rounded-xl overflow-hidden shadow-borders-base border-none ">
           <Table.Header className="border-t-0">
             <Table.Row className="bg-neutral-100 border-none hover:!bg-neutral-100">
-              <Table.HeaderCell className="px-4">SKU</Table.HeaderCell>
+              <Table.HeaderCell className="px-4">Артикул</Table.HeaderCell>
               {product.options?.map((option) => {
                 if (option.title === "Default option") {
                   return null
@@ -89,9 +89,9 @@ const ProductVariantsTable = ({
                 )
               })}
               <Table.HeaderCell className="px-4 border-x">
-                Price
+                Цена
               </Table.HeaderCell>
-              <Table.HeaderCell className="px-4">Quantity</Table.HeaderCell>
+              <Table.HeaderCell className="px-4">Кол-во</Table.HeaderCell>
             </Table.Row>
           </Table.Header>
           <Table.Body className="border-none">
@@ -109,13 +109,18 @@ const ProductVariantsTable = ({
                   })}
                 >
                   <Table.Cell className="px-4">{variant.sku}</Table.Cell>
-                  {variant.options?.map((option, index) => {
-                    if (option.value === "Default option value") {
+                  {/* значения опций берём по option_id в порядке колонок товара: у варианта массив options
+                      приходит в произвольном порядке, и «Размер»/«Цвет» иначе меняются местами */}
+                  {product.options?.map((productOption) => {
+                    const value = variant.options?.find(
+                      (o) => o.option_id === productOption.id
+                    )?.value
+                    if (value === "Default option value") {
                       return null
                     }
                     return (
-                      <Table.Cell key={option.id} className="px-4 border-x">
-                        {option.value}
+                      <Table.Cell key={productOption.id} className="px-4 border-x">
+                        {value}
                       </Table.Cell>
                     )
                   })}
