@@ -9,7 +9,7 @@
 import { ExecArgs } from "@medusajs/framework/types"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { updateInventoryLevelsWorkflow, createInventoryLevelsWorkflow } from "@medusajs/medusa/core-flows"
-import { OnecMcp, Q_STOCK, ZERO_GUID } from "../lib/onec-mcp"
+import { OnecMcp, Q_SCOPE, Q_STOCK, ZERO_GUID } from "../lib/onec-mcp"
 
 export default async function syncStock({ container, args }: ExecArgs) {
   const logger = container.resolve(ContainerRegistrationKeys.LOGGER)
@@ -18,6 +18,8 @@ export default async function syncStock({ container, args }: ExecArgs) {
   const t0 = Date.now()
 
   const mcp = new OnecMcp()
+  const scopeRows = await mcp.query(Q_SCOPE)
+  const inScope = new Set(scopeRows.map((r) => String(r["Ном__id"] || "").toLowerCase()).filter(Boolean))
   const rows = await mcp.query(Q_STOCK)
   const byKey = new Map<string, number>()
   const byNom = new Map<string, number>()
@@ -30,7 +32,7 @@ export default async function syncStock({ container, args }: ExecArgs) {
     byKey.set(key, (byKey.get(key) || 0) + qty)
     byNom.set(nom, (byNom.get(nom) || 0) + qty)
   }
-  logger.info(`1С: строк остатков ${rows.length} (${((Date.now() - t0) / 1000).toFixed(1)} с)`)
+  logger.info(`1С: номенклатуры на сайте ${inScope.size}, строк остатков ${rows.length} (${((Date.now() - t0) / 1000).toFixed(1)} с)`)
 
   const { data: locations } = await query.graph({ entity: "stock_location", fields: ["id", "name"] })
   const location = locations.find((l: any) => l.name === "Оптовый склад Омск") || locations[0]
@@ -47,6 +49,7 @@ export default async function syncStock({ container, args }: ExecArgs) {
   const creates: any[] = []
   let matched = 0, skipped = 0
   const examples: string[] = []
+  const unmatched: string[] = []
   for (const v of variants) {
     const item = v.inventory_items?.[0]?.inventory_item_id
     if (!item) continue
@@ -54,10 +57,11 @@ export default async function syncStock({ container, args }: ExecArgs) {
     const pg = String(v.product?.metadata?.guid || "").toLowerCase()
     const single = (v.product?.variants?.length || 1) === 1
     let want: number | undefined
+    const nom = (vg.split("#")[0] || pg)
     if (vg && byKey.has(vg)) want = byKey.get(vg)
-    else if (single && pg && byNom.has(pg)) want = byNom.get(pg)
-    else if (vg && byNom.has(vg.split("#")[0]) && single) want = byNom.get(vg.split("#")[0])
-    if (want === undefined) { skipped++; continue }
+    else if (single && nom && byNom.has(nom)) want = byNom.get(nom)
+    else if (nom && inScope.has(nom)) want = 0 // номенклатура на сайте, но остатка в регистре нет → распродано
+    if (want === undefined) { skipped++; if (unmatched.length < 12) unmatched.push(`${v.sku} [${vg || pg || "без guid"}]`); continue }
     matched++
     const packMult = v.metadata?.pack_unit === "S" ? Math.max(1, Number(v.metadata?.pack_qty) || 1) : 1
     const target = Math.max(0, Math.round(want * packMult))
@@ -70,6 +74,7 @@ export default async function syncStock({ container, args }: ExecArgs) {
   }
   logger.info(`сопоставлено вариантов ${matched}, без соответствия в 1С ${skipped}; изменений ${updates.length}, новых уровней ${creates.length}${dry ? " (dry)" : ""}`)
   if (examples.length) logger.info("примеры: " + examples.join("; "))
+  if (unmatched.length) logger.info("без соответствия (первые): " + unmatched.join("; "))
   if (dry) return
   for (let i = 0; i < updates.length; i += 200) await updateInventoryLevelsWorkflow(container).run({ input: { updates: updates.slice(i, i + 200) } })
   for (let i = 0; i < creates.length; i += 200) await createInventoryLevelsWorkflow(container).run({ input: { inventory_levels: creates.slice(i, i + 200) } })
