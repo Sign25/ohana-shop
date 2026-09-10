@@ -1,174 +1,89 @@
 "use client"
 
 import { setShippingMethod } from "@/lib/data/cart"
-import { convertToLocale } from "@/lib/util/money"
+import { formatRub } from "@/lib/util/ohana"
 import ErrorMessage from "@/modules/checkout/components/error-message"
+import StepCard from "@/modules/checkout/components/step-card"
 import Button from "@/modules/common/components/button"
-import Divider from "@/modules/common/components/divider"
-import Radio from "@/modules/common/components/radio"
 import { ApprovalStatusType, B2BCart } from "@/types"
-import { RadioGroup, Radio as RadioGroupOption } from "@headlessui/react"
-import { CheckCircleSolid } from "@medusajs/icons"
 import { HttpTypes } from "@medusajs/types"
-import { Container, Heading, Text, clx } from "@medusajs/ui"
+import { clx } from "@medusajs/ui"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useEffect, useState } from "react"
 
-type ShippingProps = {
-  cart: B2BCart
-  availableShippingMethods: HttpTypes.StoreCartShippingOption[] | null
-}
+/** Пояснения к способам доставки (по названиям из админки) */
+const HINTS: [RegExp, string][] = [
+  [/терминал/i, "Довезём до терминала выбранной ТК в Омске бесплатно, дальше — по тарифу ТК"],
+  [/самовывоз/i, "Склад в Омске, пн–пт 10:00–18:00; заказ соберём к согласованному времени"],
+  [/до города|до двери|ТК до/i, "Стоимость доставки ТК до вашего города рассчитает менеджер и добавит в счёт"],
+]
 
-const Shipping: React.FC<ShippingProps> = ({
-  cart,
-  availableShippingMethods,
-}) => {
+const Shipping = ({ cart, availableShippingMethods }: { cart: B2BCart; availableShippingMethods: HttpTypes.StoreCartShippingOption[] | null }) => {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
   const searchParams = useSearchParams()
   const router = useRouter()
   const pathname = usePathname()
 
   const isOpen = searchParams.get("step") === "delivery"
-
-  const cartApprovalStatus = cart?.approval_status?.status
-
-  const selectedShippingMethod = availableShippingMethods?.find(
-    (method) => method.id === cart.shipping_methods?.at(-1)?.shipping_option_id
-  )
-
-  const selectedMethodId = selectedShippingMethod?.id || ""
-
-  const handleEdit = () => {
-    router.push(pathname + "?step=delivery", { scroll: false })
-  }
-
-  const handleSubmit = () => {
-    router.push(pathname + "?step=contact-details", { scroll: false })
-  }
+  const pending = cart?.approval_status?.status === ApprovalStatusType.PENDING
+  const selected = availableShippingMethods?.find((m) => m.id === cart.shipping_methods?.at(-1)?.shipping_option_id)
+  const done = !!selected
+  const locked = !cart.shipping_address?.address_1
 
   const set = async (id: string) => {
     setIsLoading(true)
-    await setShippingMethod({ cartId: cart.id, shippingMethodId: id })
-      .catch((err) => {
-        setError(err.message)
-      })
-      .finally(() => {
-        setIsLoading(false)
-      })
+    await setShippingMethod({ cartId: cart.id, shippingMethodId: id }).catch((err) => setError(err.message)).finally(() => setIsLoading(false))
   }
-
-  useEffect(() => {
-    setError(null)
-  }, [isOpen])
+  useEffect(() => setError(null), [isOpen])
 
   return (
-    <Container>
-      <div className="flex flex-col gap-y-2">
-        <div className="flex flex-row items-center justify-between w-full">
-          <Heading
-            level="h2"
-            className={clx("flex flex-row text-xl gap-x-2 items-center", {
-              "opacity-50 pointer-events-none select-none":
-                !isOpen && cart.shipping_methods?.length === 0,
-            })}
-          >
-            Способ доставки
-            {!isOpen && (cart.shipping_methods?.length ?? 0) > 0 && (
-              <CheckCircleSolid />
-            )}
-          </Heading>
-          {!isOpen &&
-            cart?.shipping_address &&
-            cart?.billing_address &&
-            cart?.email &&
-            cartApprovalStatus !== ApprovalStatusType.PENDING && (
-              <Text>
-                <button
-                  onClick={handleEdit}
-                  className="text-ui-fg-interactive hover:text-ui-fg-interactive-hover"
-                  data-testid="edit-delivery-button"
-                >
-                  Изменить
-                </button>
-              </Text>
-            )}
-        </div>
-        {(isOpen || (cart && (cart.shipping_methods?.length ?? 0) > 0)) && (
-          <Divider />
-        )}
-      </div>
-      {isOpen ? (
-        <div data-testid="delivery-options-container">
-          <div className="">
-            <RadioGroup value={selectedMethodId} onChange={set}>
-              {availableShippingMethods?.map((option) => (
-                <div key={option.id}>
-                  <RadioGroupOption
-                    value={option.id}
-                    data-testid="delivery-option-radio"
-                    className={clx(
-                      "flex items-center justify-between text-small-regular cursor-pointer py-2",
-                      {
-                        "border-ui-border-interactive":
-                          option.id === selectedShippingMethod?.id,
-                      }
-                    )}
-                  >
-                    <div className="flex items-center gap-x-4">
-                      <Radio
-                        checked={option.id === selectedShippingMethod?.id}
-                      />
-                      <span className="text-base-regular">{option.name}</span>
-                    </div>
-                    <span className="justify-self-end text-ui-fg-base">
-                      {convertToLocale({
-                        amount: option.amount!,
-                        currency_code: cart?.currency_code,
-                      })}
-                    </span>
-                  </RadioGroupOption>
-                  <Divider />
-                </div>
-              ))}
-            </RadioGroup>
-          </div>
-          <div className="flex flex-col gap-y-2 items-end">
-            <ErrorMessage
-              error={error}
-              data-testid="delivery-option-error-message"
-            />
-
-            <Button
-              size="large"
-              className="mt-4"
-              onClick={handleSubmit}
-              isLoading={isLoading}
-              disabled={!cart.shipping_methods?.[0]}
-              data-testid="submit-delivery-option-button"
+    <StepCard
+      n={2}
+      title="Способ доставки"
+      open={isOpen}
+      done={done}
+      locked={locked}
+      onEdit={!pending && !locked ? () => router.push(pathname + "?step=delivery", { scroll: false }) : undefined}
+      testId="delivery-step"
+      summary={selected && <div><span className="font-medium text-oh-ink">{selected.name}</span> · {selected.amount ? formatRub(selected.amount) : "бесплатно"}</div>}
+    >
+      <div className="flex flex-col gap-2" data-testid="delivery-options-container" role="radiogroup">
+        {availableShippingMethods?.map((option) => {
+          const on = option.id === selected?.id
+          const hint = HINTS.find(([re]) => re.test(option.name))?.[1]
+          return (
+            <button
+              key={option.id}
+              type="button"
+              role="radio"
+              aria-checked={on}
+              onClick={() => set(option.id)}
+              data-testid="delivery-option-radio"
+              className={clx(
+                "flex items-start gap-3 rounded-lg border p-3 text-left transition-colors",
+                on ? "border-oh-azure bg-oh-azure/5" : "border-oh-line-2 hover:border-oh-azure/60"
+              )}
             >
-              Далее
-            </Button>
-          </div>
-        </div>
-      ) : (
-        cart.shipping_methods &&
-        cart.shipping_methods?.length > 0 && (
-          <div className="text-small-regular pt-2">
-            <div className="flex flex-col w-full">
-              <Text className="txt-medium text-ui-fg-subtle">
-                {selectedShippingMethod?.name}{" "}
-                {convertToLocale({
-                  amount: selectedShippingMethod?.amount!,
-                  currency_code: cart?.currency_code,
-                })}
-              </Text>
-            </div>
-          </div>
-        )
-      )}
-    </Container>
+              <span className={clx("mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2", on ? "border-oh-azure" : "border-oh-line-2")}>
+                {on && <span className="h-2.5 w-2.5 rounded-full bg-oh-azure" />}
+              </span>
+              <span className="flex-1">
+                <span className="block text-[15px] font-medium text-oh-ink">{option.name}</span>
+                {hint && <span className="block text-[12.5px] text-oh-muted">{hint}</span>}
+              </span>
+              <span className="shrink-0 text-[14px] text-oh-ink">{option.amount ? formatRub(option.amount) : "0 ₽"}</span>
+            </button>
+          )
+        })}
+      </div>
+      <div className="mt-5 flex flex-col items-end gap-2">
+        <ErrorMessage error={error} data-testid="delivery-option-error-message" />
+        <Button size="large" onClick={() => router.push(pathname + "?step=contact-details", { scroll: false })} isLoading={isLoading} disabled={!cart.shipping_methods?.[0]} data-testid="submit-delivery-option-button">
+          Далее: реквизиты
+        </Button>
+      </div>
+    </StepCard>
   )
 }
 

@@ -428,6 +428,8 @@ export async function setShippingAddress(formData: FormData) {
       // customer_id: customer?.id,
       email: customer?.email || formData.get("email"),
     } as any
+    // отдельного шага «плательщик» нет: адрес плательщика = адрес доставки (реквизиты юрлица — на шаге 3)
+    data.billing_address = { ...data.shipping_address }
     await updateCart(data)
   } catch (e: any) {
     throw new Error(e)
@@ -475,7 +477,10 @@ export async function setContactDetails(
       email: formData.get("email") as string,
       metadata: {
         invoice_recipient: formData.get("invoice_recipient"),
-        cost_center: formData.get("cost_center"),
+        cost_center: formData.get("cost_center"), // ИНН (ключ стартера, по нему читают заказы)
+        kpp: formData.get("kpp"),
+        legal_address: formData.get("legal_address"),
+        contact_phone: formData.get("contact_phone"),
         requisition_number: formData.get("requisition_number"),
         door_code: formData.get("door_code"),
         notes: formData.get("notes"),

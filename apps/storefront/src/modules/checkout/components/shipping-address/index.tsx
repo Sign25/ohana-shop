@@ -3,130 +3,63 @@
 import { setShippingAddress } from "@/lib/data/cart"
 import ErrorMessage from "@/modules/checkout/components/error-message"
 import ShippingAddressForm from "@/modules/checkout/components/shipping-address-form"
+import StepCard from "@/modules/checkout/components/step-card"
 import { SubmitButton } from "@/modules/checkout/components/submit-button"
-import Divider from "@/modules/common/components/divider"
-import Spinner from "@/modules/common/icons/spinner"
 import { B2BCart, B2BCustomer } from "@/types"
 import { ApprovalStatusType } from "@/types/approval"
-import { CheckCircleSolid } from "@medusajs/icons"
-import { Container, Heading, Text } from "@medusajs/ui"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { useCallback, useState } from "react"
+import { useState } from "react"
 
-const ShippingAddress = ({
-  cart,
-  customer,
-}: {
-  cart: B2BCart | null
-  customer: B2BCustomer | null
-}) => {
+const ShippingAddress = ({ cart, customer }: { cart: B2BCart | null; customer: B2BCustomer | null }) => {
   const searchParams = useSearchParams()
   const router = useRouter()
   const pathname = usePathname()
   const [error, setError] = useState<string | null>(null)
 
-  const isOpen = searchParams.get("step") === "shipping-address"
-
-  const cartApprovalStatus = cart?.approval_status?.status
-
-  const createQueryString = useCallback(
-    (name: string, value: string) => {
-      const params = new URLSearchParams(searchParams)
-      params.set(name, value)
-
-      return params.toString()
-    },
-    [searchParams]
-  )
-  const handleEdit = () => {
-    router.push(
-      pathname + "?" + createQueryString("step", "shipping-address"),
-      { scroll: false }
-    )
-  }
+  const step = searchParams.get("step") || "shipping-address"
+  const isOpen = step === "shipping-address"
+  const a = cart?.shipping_address
+  const done = !!a?.address_1
+  const pending = cart?.approval_status?.status === ApprovalStatusType.PENDING
 
   const handleSubmit = async (formData: FormData) => {
-    await setShippingAddress(formData).catch((e) => {
+    setError(null)
+    try {
+      await setShippingAddress(formData)
+      router.push(pathname + "?step=delivery", { scroll: false })
+    } catch (e: any) {
       setError(e.message)
-      return
-    })
-
-    router.push(pathname + "?" + createQueryString("step", "billing-address"), {
-      scroll: false,
-    })
+    }
   }
 
   return (
-    <Container>
-      <div className="flex flex-col gap-y-2">
-        <div className="flex flex-row items-center justify-between w-full">
-          <Heading
-            level="h2"
-            className="flex flex-row text-xl gap-x-2 items-center"
-          >
-            Адрес доставки
-            {!isOpen && <CheckCircleSolid />}
-          </Heading>
-
-          {!isOpen &&
-            cart?.shipping_address &&
-            cartApprovalStatus !== ApprovalStatusType.PENDING && (
-              <Text>
-                <button
-                  onClick={handleEdit}
-                  className="text-ui-fg-interactive hover:text-ui-fg-interactive-hover"
-                  data-testid="edit-address-button"
-                >
-                  Изменить
-                </button>
-              </Text>
-            )}
-        </div>
-        <Divider />
-        {isOpen ? (
-          <form action={handleSubmit}>
-            <div className="pb-8">
-              <ShippingAddressForm customer={customer} cart={cart} />
-              <div className="flex flex-col gap-y-2 items-end">
-                <SubmitButton
-                  className="mt-6"
-                  data-testid="submit-address-button"
-                >
-                  Далее
-                </SubmitButton>
-                <ErrorMessage
-                  error={error}
-                  data-testid="address-error-message"
-                />
-              </div>
+    <StepCard
+      n={1}
+      title="Получатель и адрес доставки"
+      open={isOpen}
+      done={done}
+      onEdit={!pending ? () => router.push(pathname + "?step=shipping-address", { scroll: false }) : undefined}
+      testId="shipping-address-step"
+      summary={
+        a && (
+          <div className="flex flex-col gap-0.5" data-testid="shipping-address-summary">
+            <div className="font-medium text-oh-ink">
+              {[a.company, [a.first_name, a.last_name].filter(Boolean).join(" ")].filter(Boolean).join(" · ")}
             </div>
-          </form>
-        ) : (
-          <div>
-            <div className="text-small-regular">
-              {cart && cart.shipping_address ? (
-                <div className="flex items-start gap-x-8">
-                  <div className="flex" data-testid="shipping-address-summary">
-                    <Text className="txt-medium text-ui-fg-subtle">
-                      {cart.shipping_address.first_name}{" "}
-                      {cart.shipping_address.last_name},{" "}
-                      {cart.shipping_address.address_1},{" "}
-                      {cart.shipping_address.postal_code},{" "}
-                      {cart.shipping_address.city},{" "}
-                      {cart.shipping_address.country_code?.toUpperCase()}
-                    </Text>
-                  </div>
-                </div>
-              ) : (
-                <div>
-                  <Spinner />
-                </div>
-              )}
-            </div>
+            <div>{[a.postal_code, a.city, a.province, a.address_1].filter(Boolean).join(", ")}</div>
+            {a.phone && <div className="text-oh-muted">{a.phone}</div>}
           </div>
-        )}
-      </div>
-    </Container>
+        )
+      }
+    >
+      <form action={handleSubmit}>
+        <ShippingAddressForm customer={customer} cart={cart} />
+        <div className="mt-5 flex flex-col items-end gap-2">
+          <SubmitButton data-testid="submit-address-button">Далее: доставка</SubmitButton>
+          <ErrorMessage error={error} data-testid="address-error-message" />
+        </div>
+      </form>
+    </StepCard>
   )
 }
 
