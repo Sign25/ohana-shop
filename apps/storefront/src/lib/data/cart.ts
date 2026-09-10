@@ -116,6 +116,20 @@ export async function updateCart(data: HttpTypes.StoreUpdateCart) {
     .catch(medusaError)
 }
 
+
+/**
+ * Пересчёт уровня цен оптовика на бэкенде (POST /store/carts/:id/ohana-tier):
+ * от 100 000 ₽ по базовым ценам все позиции переходят на цену крупного опта.
+ * Вызывается после каждого изменения состава корзины.
+ */
+async function ohanaRetier(cartId?: string | null) {
+  if (!cartId) return
+  const headers = { ...(await getAuthHeaders()) }
+  await sdk.client
+    .fetch(`/store/carts/${cartId}/ohana-tier`, { method: "POST", headers })
+    .catch(() => {})
+}
+
 export async function addToCart({
   variantId,
   quantity,
@@ -149,6 +163,7 @@ export async function addToCart({
       headers
     )
     .then(async () => {
+      await ohanaRetier(cart.id)
       const fullfillmentCacheTag = await getCacheTag("fulfillment")
       revalidateTag(fullfillmentCacheTag)
       const cartCacheTag = await getCacheTag("carts")
@@ -189,6 +204,7 @@ export async function addToCartBulk({
     }
   )
     .then(async () => {
+      await ohanaRetier(cart.id)
       const fullfillmentCacheTag = await getCacheTag("fulfillment")
       revalidateTag(fullfillmentCacheTag)
       const cartCacheTag = await getCacheTag("carts")
@@ -221,6 +237,7 @@ export async function updateLineItem({
   await sdk.store.cart
     .updateLineItem(cartId, lineId, data, {}, headers)
     .then(async () => {
+      await ohanaRetier(cartId)
       const fullfillmentCacheTag = await getCacheTag("fulfillment")
       revalidateTag(fullfillmentCacheTag)
       const cartCacheTag = await getCacheTag("carts")
@@ -246,6 +263,7 @@ export async function deleteLineItem(lineId: string) {
   await sdk.store.cart
     .deleteLineItem(cartId, lineId, {}, headers)
     .then(async () => {
+      await ohanaRetier(cartId)
       const fullfillmentCacheTag = await getCacheTag("fulfillment")
       revalidateTag(fullfillmentCacheTag)
       const cartCacheTag = await getCacheTag("carts")

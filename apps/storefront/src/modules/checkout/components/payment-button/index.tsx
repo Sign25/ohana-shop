@@ -89,7 +89,7 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
         />
       )
     default:
-      return <Button disabled>Select a payment method</Button>
+      return <Button disabled>Выберите способ оплаты</Button>
   }
 }
 
@@ -125,10 +125,10 @@ const RequestApprovalButton = ({
       <Container className="flex flex-col gap-y-2">
         <Text className="text-neutral-700-950 text-xs text-center">
           {requires_admin_approval && requires_sales_manager_approval
-            ? "This order requires approval by both a company admin and a sales manager."
+            ? "Заказ требует согласования администратором компании и менеджером."
             : requires_admin_approval
-            ? "This order requires approval by a company admin."
-            : "This order requires approval by a sales manager."}
+            ? "Заказ требует согласования администратором компании."
+            : "Заказ требует согласования менеджером."}
         </Text>
         <Button
           className="w-full h-10 rounded-full shadow-none"
@@ -157,7 +157,7 @@ const GiftCardPaymentButton = ({ cart }: { cart: B2BCart }) => {
       isLoading={submitting}
       data-testid="submit-order-button"
     >
-      Place order
+      Оформить заказ
     </Button>
   )
 }
@@ -260,7 +260,7 @@ const StripePaymentButton = ({
         isLoading={submitting}
         data-testid={dataTestId}
       >
-        Place order
+        Оформить заказ
       </Button>
       <ErrorMessage
         error={errorMessage}
@@ -376,7 +376,7 @@ const ManualTestPaymentButton = ({
         size="large"
         data-testid="submit-order-button"
       >
-        Place order
+        Оформить заказ
       </Button>
       <ErrorMessage
         error={errorMessage}

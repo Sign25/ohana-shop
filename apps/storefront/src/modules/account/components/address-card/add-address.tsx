@@ -59,14 +59,14 @@ const AddAddress = ({ region }: { region: HttpTypes.StoreRegion }) => {
             <div className="flex flex-col gap-y-2">
               <div className="grid grid-cols-2 gap-x-2">
                 <Input
-                  label="First name"
+                  label="Имя"
                   name="first_name"
                   required
                   autoComplete="given-name"
                   data-testid="first-name-input"
                 />
                 <Input
-                  label="Last name"
+                  label="Фамилия"
                   name="last_name"
                   required
                   autoComplete="family-name"
@@ -74,13 +74,13 @@ const AddAddress = ({ region }: { region: HttpTypes.StoreRegion }) => {
                 />
               </div>
               <Input
-                label="Company"
+                label="Компания"
                 name="company"
                 autoComplete="organization"
                 data-testid="company-input"
               />
               <Input
-                label="Address"
+                label="Адрес (улица, дом, офис или терминал ТК)"
                 name="address_1"
                 required
                 autoComplete="address-line1"
@@ -94,14 +94,14 @@ const AddAddress = ({ region }: { region: HttpTypes.StoreRegion }) => {
               />
               <div className="grid grid-cols-[144px_1fr] gap-x-2">
                 <Input
-                  label="Postal code"
+                  label="Индекс"
                   name="postal_code"
                   required
                   autoComplete="postal-code"
                   data-testid="postal-code-input"
                 />
                 <Input
-                  label="City"
+                  label="Город"
                   name="city"
                   required
                   autoComplete="locality"
@@ -122,7 +122,7 @@ const AddAddress = ({ region }: { region: HttpTypes.StoreRegion }) => {
                 data-testid="country-select"
               />
               <Input
-                label="Phone"
+                label="Телефон"
                 name="phone"
                 autoComplete="phone"
                 data-testid="phone-input"

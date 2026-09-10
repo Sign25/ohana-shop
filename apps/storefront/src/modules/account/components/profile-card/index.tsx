@@ -84,7 +84,7 @@ const ProfileCard = ({ customer }: { customer: B2BCustomer }) => {
           <div className="flex flex-col gap-y-2">
             <Text className="font-medium text-neutral-950">Phone</Text>
             <Input
-              label="Phone"
+              label="Телефон"
               name="phone"
               value={customerData.phone}
               onChange={(e) =>

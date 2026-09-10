@@ -1,15 +1,14 @@
 "use client"
 
 import { useCart } from "@/lib/context/cart-context"
+import { formatRub } from "@/lib/util/ohana"
 import AddNoteButton from "@/modules/cart/components/add-note-button"
 import DeleteButton from "@/modules/common/components/delete-button"
-import LineItemPrice from "@/modules/common/components/line-item-price"
 import LocalizedClientLink from "@/modules/common/components/localized-client-link"
-import Spinner from "@/modules/common/icons/spinner"
-import Thumbnail from "@/modules/products/components/thumbnail"
 import { HttpTypes } from "@medusajs/types"
-import { clx, Container, Input } from "@medusajs/ui"
-import { startTransition, useEffect, useState } from "react"
+import { clx } from "@medusajs/ui"
+import Image from "next/image"
+import { useEffect, useState } from "react"
 
 type ItemProps = {
   item: HttpTypes.StoreCartLineItem
@@ -18,172 +17,70 @@ type ItemProps = {
   disabled?: boolean
 }
 
-const ItemFull = ({
-  item,
-  showBorders = true,
-  currencyCode,
-  disabled,
-}: ItemProps) => {
-  const [updating, setUpdating] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
+/** Строка корзины: фото, артикул и размер, цена за шт (с пометкой «крупный опт»), количество кратно упаковке */
+const ItemFull = ({ item, showBorders = true, disabled }: ItemProps) => {
   const [quantity, setQuantity] = useState(item.quantity.toString())
-
   const { handleDeleteItem, handleUpdateCartQuantity } = useCart()
+  const meta = (item.variant?.metadata || {}) as any
+  const step = Math.max(1, Number(meta.qty_step) || 1)
+  const max = item.variant?.inventory_quantity ?? 100000
+  const tier = (item.metadata as any)?.tier
+  const base = Number((item.metadata as any)?.base_price) || 0
 
-  const changeQuantity = async (newQuantity: number) => {
-    setError(null)
-    // setUpdating(true)
+  useEffect(() => setQuantity(item.quantity.toString()), [item.quantity])
 
-    startTransition(() => {
-      setQuantity(newQuantity.toString())
-    })
-
-    await handleUpdateCartQuantity(item.id, Number(newQuantity))
+  const change = async (q: number) => {
+    const v = Math.min(max, Math.max(0, step > 1 ? Math.ceil(q / step) * step : q))
+    if (v <= 0) return handleDeleteItem(item.id)
+    setQuantity(v.toString())
+    await handleUpdateCartQuantity(item.id, v)
   }
-
-  useEffect(() => {
-    setQuantity(item.quantity.toString())
-  }, [item.quantity])
-
-  const handleBlur = (value: number) => {
-    if (value === item.quantity) {
-      return
-    }
-
-    if (value > maxQuantity) {
-      changeQuantity(maxQuantity)
-    }
-
-    if (value < 1) {
-      setUpdating(true)
-      handleDeleteItem(item.id)
-      setUpdating(false)
-    }
-
-    changeQuantity(value)
-  }
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (disabled) {
-      return
-    }
-
-    if (e.key === "Enter") {
-      changeQuantity(Number(quantity))
-    }
-
-    if (e.key === "ArrowUp" && e.shiftKey) {
-      e.preventDefault()
-      setQuantity((Number(quantity) + 10).toString())
-    }
-
-    if (e.key === "ArrowDown" && e.shiftKey) {
-      e.preventDefault()
-      setQuantity((Number(quantity) - 10).toString())
-    }
-  }
-
-  const maxQuantity = item.variant?.inventory_quantity ?? 100
 
   return (
-    <Container
-      className={clx("flex gap-4 w-full h-full items-center justify-between", {
-        "shadow-none": !showBorders,
-      })}
-    >
-      <div className="flex gap-x-4 items-start">
-        <LocalizedClientLink href={`/products/${item.product_handle}`}>
-          <Thumbnail
-            thumbnail={item.thumbnail}
-            size="square"
-            type="full"
-            className="bg-neutral-100 rounded-lg w-20 h-20"
-          />
+    <div className={clx("flex w-full items-center gap-4 bg-white p-3", showBorders && "oh-card")}>
+      <LocalizedClientLink href={`/products/${item.product_handle}`} className="relative h-24 w-[72px] shrink-0 overflow-hidden rounded-lg bg-oh-paper">
+        {item.thumbnail && <Image src={item.thumbnail} alt="" fill sizes="72px" className="object-cover" />}
+      </LocalizedClientLink>
+      <div className="flex min-w-0 flex-1 flex-col gap-1">
+        <LocalizedClientLink href={`/products/${item.product_handle}`} className="line-clamp-2 text-[13.5px] font-medium text-oh-ink hover:text-oh-azure">
+          {item.product?.title || item.title}
         </LocalizedClientLink>
-        <div className="flex flex-col gap-y-2 justify-between min-h-full self-stretch">
-          <div className="flex flex-col">
-            <span className="text-neutral-600 text-[0.6rem]">BRAND</span>
-
-            <span className="txt-medium-plus text-neutral-950">
-              {item.product?.title}
-            </span>
-            <span className="text-neutral-600 text-xs">
-              {item.variant?.title}
-            </span>
-          </div>
-          <div className="flex small:flex-row flex-col gap-2">
-            <LineItemPrice
-              className="flex small:hidden self-start"
-              item={item}
-              currencyCode={currencyCode}
-            />
-            <div className="flex gap-x-2">
-              <div className="flex gap-x-3 shadow-[0_0_0_1px_rgba(0,0,0,0.1)] rounded-full w-fit p-px items-center">
-                <button
-                  className={clx(
-                    "w-4 h-4 flex items-center justify-center text-neutral-600 hover:bg-neutral-100 rounded-full text-md",
-                    disabled ? "opacity-50 pointer-events-none" : "opacity-100"
-                  )}
-                  onClick={() => changeQuantity(item.quantity - 1)}
-                  disabled={item.quantity <= 1 || disabled}
-                >
-                  -
-                </button>
-                <span className="w-4 h-4 flex items-center justify-center text-neutral-950 text-xs">
-                  {updating ? (
-                    <Spinner size="12" />
-                  ) : (
-                    <Input
-                      className={clx(
-                        "w-10 h-4 flex items-center justify-center text-center text-neutral-950 text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none bg-transparent shadow-none",
-                        disabled
-                          ? "opacity-50 pointer-events-none"
-                          : "opacity-100"
-                      )}
-                      type="number"
-                      value={quantity}
-                      onChange={(e) => {
-                        setQuantity(e.target.value)
-                      }}
-                      onBlur={(e) => {
-                        handleBlur(Number(e.target.value))
-                      }}
-                      onKeyDown={(e) => handleKeyDown(e)}
-                      disabled={disabled}
-                    />
-                  )}
-                </span>
-                <button
-                  className={clx(
-                    "w-4 h-4 flex items-center justify-center text-neutral-600 hover:bg-neutral-100 rounded-full text-md",
-                    disabled ? "opacity-50 pointer-events-none" : "opacity-100"
-                  )}
-                  onClick={() => changeQuantity(item.quantity + 1)}
-                  disabled={item.quantity >= maxQuantity || disabled}
-                >
-                  +
-                </button>
-              </div>
-
-              <DeleteButton id={item.id} disabled={disabled} />
-            </div>
-            <AddNoteButton
-              item={item as HttpTypes.StoreCartLineItem}
+        <div className="text-[12px] text-oh-muted">
+          {item.variant?.sku && <span>Арт. {item.variant.sku} · </span>}
+          {item.variant?.title}
+        </div>
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px]">
+          <span className={clx(tier === "krupny" ? "text-oh-azure" : "text-oh-graphite")}>
+            {formatRub(item.unit_price)} за шт
+            {tier === "krupny" && base > item.unit_price && <span className="ml-1 text-oh-muted line-through">{formatRub(base)}</span>}
+          </span>
+          {step > 1 && <span className="text-oh-muted">упак. {step} шт</span>}
+        </div>
+        <div className="mt-1 flex flex-wrap items-center gap-2">
+          <div className="flex items-center rounded-pill border border-oh-line">
+            <button type="button" onClick={() => change(item.quantity - step)} disabled={disabled} className="h-7 w-7 text-oh-graphite hover:text-oh-azure disabled:opacity-40" aria-label="Меньше">−</button>
+            <input
+              type="number"
+              value={quantity}
+              min={0}
+              step={step}
               disabled={disabled}
+              onChange={(e) => setQuantity(e.target.value)}
+              onBlur={(e) => change(Number(e.target.value) || 0)}
+              onKeyDown={(e) => e.key === "Enter" && change(Number(quantity) || 0)}
+              className="h-7 w-14 border-x border-oh-line bg-transparent text-center text-[13px] text-oh-ink [appearance:textfield] focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
             />
+            <button type="button" onClick={() => change(item.quantity + step)} disabled={disabled || item.quantity + step > max} className="h-7 w-7 text-oh-graphite hover:text-oh-azure disabled:opacity-40" aria-label="Больше">+</button>
           </div>
+          <DeleteButton id={item.id} disabled={disabled} />
+          <AddNoteButton item={item as HttpTypes.StoreCartLineItem} disabled={disabled} />
         </div>
       </div>
-      <div className="flex flex-col items-start justify-between min-h-full self-stretch">
-        <LineItemPrice
-          className="hidden small:flex"
-          item={item}
-          currencyCode={currencyCode}
-          style="default"
-        />
+      <div className="hidden shrink-0 text-right small:block">
+        <div className="text-[15px] font-semibold text-oh-ink">{formatRub((item.total ?? item.unit_price * item.quantity) as number)}</div>
+        <div className="text-[11px] text-oh-muted">{item.quantity} шт</div>
       </div>
-    </Container>
+    </div>
   )
 }
 

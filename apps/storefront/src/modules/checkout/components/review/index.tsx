@@ -1,60 +1,36 @@
 "use client"
 
-import { Text } from "@medusajs/ui"
-
 import { checkSpendingLimit } from "@/lib/util/check-spending-limit"
+import { formatRub, OPT_THRESHOLD } from "@/lib/util/ohana"
 import PaymentButton from "@/modules/checkout/components/payment-button"
-import Button from "@/modules/common/components/button"
-import LocalizedClientLink from "@/modules/common/components/localized-client-link"
 import { B2BCart, B2BCustomer } from "@/types"
-import { ExclamationCircle } from "@medusajs/icons"
 
-const Review = ({
-  cart,
-  customer,
-}: {
-  cart: B2BCart
-  customer: B2BCustomer | null
-}) => {
-  const spendLimitExceeded = customer
-    ? checkSpendingLimit(cart, customer)
-    : false
+const Review = ({ cart, customer }: { cart: B2BCart; customer: B2BCustomer | null }) => {
+  const spendLimitExceeded = customer ? checkSpendingLimit(cart, customer) : false
+  const belowMin = (cart.item_subtotal ?? 0) < OPT_THRESHOLD
 
   return (
-    <div className="flex flex-col gap-y-2">
-      <div className="flex items-start gap-x-1 w-full">
-        <Text className="txt-xsmall text-neutral-500 mb-1">
-          By Completing this order, I agree to Medusa&apos;s{" "}
-          <LocalizedClientLink
-            href="/terms-of-sale"
-            className="hover:text-neutral-800"
-            target="_blank"
-          >
-            Terms of Sale ↗
-          </LocalizedClientLink>{" "}
-          and{" "}
-          <LocalizedClientLink
-            href="/privacy-policy"
-            className="hover:text-neutral-800"
-            target="_blank"
-          >
-            Privacy Policy ↗
-          </LocalizedClientLink>
-        </Text>
-      </div>
-      {spendLimitExceeded ? (
+    <div className="flex flex-col gap-y-3">
+      <p className="text-[11px] leading-relaxed text-oh-muted">
+        Нажимая «Оформить заказ», вы соглашаетесь с{" "}
+        <a href="https://ohanaopt.ru/faq/" target="_blank" rel="noreferrer" className="underline hover:text-oh-azure">условиями оптовых поставок</a>{" "}
+        и{" "}
+        <a href="https://ohanaopt.ru/privacy/" target="_blank" rel="noreferrer" className="underline hover:text-oh-azure">политикой обработки персональных данных</a>.
+        Заказ берётся в работу после оплаты счёта.
+      </p>
+      {belowMin ? (
         <>
-          <div className="flex items-center gap-x-2 bg-neutral-100 p-3 rounded-md shadow-borders-base">
-            <ExclamationCircle className="text-orange-500 w-fit overflow-visible" />
-            <p className="text-neutral-950 text-xs">
-              This order exceeds your spending limit.
-              <br />
-              Please contact your manager for approval.
-            </p>
-          </div>
-          <Button className="w-full h-10 rounded-full shadow-none" disabled>
-            Place Order
-          </Button>
+          <p className="rounded-lg bg-oh-paper px-3 py-2 text-[12px] text-oh-graphite">
+            Минимальный оптовый заказ — {formatRub(OPT_THRESHOLD)}. Сейчас в корзине {formatRub(cart.item_subtotal ?? 0)}.
+          </p>
+          <button className="oh-btn w-full" disabled>Оформить заказ</button>
+        </>
+      ) : spendLimitExceeded ? (
+        <>
+          <p className="rounded-lg bg-oh-paper px-3 py-2 text-[12px] text-oh-graphite">
+            Заказ превышает лимит расходов вашего сотрудника. Нужна проверка администратором компании.
+          </p>
+          <button className="oh-btn w-full" disabled>Оформить заказ</button>
         </>
       ) : (
         <PaymentButton cart={cart} data-testid="submit-order-button" />

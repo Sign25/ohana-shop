@@ -195,7 +195,7 @@ const QuoteDetails: React.FC<QuoteDetailsProps> = ({
 
           <Container>
             <Heading level="h3" className="mb-2">
-              Company
+              Компания
             </Heading>
 
             <div className="text-sm text-ui-fg-subtle">

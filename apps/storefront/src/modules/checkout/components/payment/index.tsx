@@ -129,7 +129,7 @@ const Payment = ({
                 !isOpen && !paymentReady,
             })}
           >
-            Payment Method
+            Оплата
             {!isOpen && paymentReady && <CheckCircleSolid />}
           </Heading>
           {!isOpen &&
@@ -141,7 +141,7 @@ const Payment = ({
                   className="text-ui-fg-interactive hover:text-ui-fg-interactive-hover"
                   data-testid="edit-payment-button"
                 >
-                  Edit
+                  Изменить
                 </button>
               </Text>
             )}
@@ -174,7 +174,7 @@ const Payment = ({
               {stripeReady && selectedPaymentMethod === "pp_stripe_stripe" && (
                 <div className="mt-5 transition-all duration-150 ease-in-out">
                   <Text className="txt-medium-plus text-ui-fg-base mb-1">
-                    Enter your card details:
+                    Данные карты:
                   </Text>
 
                   <CardElement
@@ -223,8 +223,8 @@ const Payment = ({
               data-testid="submit-payment-button"
             >
               {!activeSession && isStripeLike(selectedPaymentMethod)
-                ? " Enter card details"
-                : "Next step"}
+                ? " Ввести данные карты"
+                : "Далее"}
             </Button>
           </div>
         </div>
@@ -262,7 +262,7 @@ const Payment = ({
           ) : paidByGiftcard ? (
             <div className="flex flex-col w-1/3">
               <Text className="txt-medium-plus text-ui-fg-base mb-1">
-                Payment method
+                Способ оплаты
               </Text>
               <Text
                 className="txt-medium text-ui-fg-subtle"

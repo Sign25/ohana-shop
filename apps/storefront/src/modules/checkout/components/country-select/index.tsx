@@ -9,7 +9,7 @@ const CountrySelect = forwardRef<
   NativeSelectProps & {
     region?: HttpTypes.StoreRegion
   }
->(({ placeholder = "Country", region, defaultValue, ...props }, ref) => {
+>(({ placeholder = "Страна", region, defaultValue, ...props }, ref) => {
   const innerRef = useRef<HTMLSelectElement>(null)
 
   useImperativeHandle<HTMLSelectElement | null, HTMLSelectElement | null>(
@@ -24,7 +24,8 @@ const CountrySelect = forwardRef<
 
     return region.countries?.map((country) => ({
       value: country.iso_2,
-      label: country.display_name,
+      // названия стран приходят по-английски; для нашего региона показываем по-русски
+      label: ({ ru: "Россия", by: "Беларусь", kz: "Казахстан", kg: "Киргизия", am: "Армения", uz: "Узбекистан" } as Record<string, string>)[country.iso_2 || ""] || country.display_name,
     }))
   }, [region])
 

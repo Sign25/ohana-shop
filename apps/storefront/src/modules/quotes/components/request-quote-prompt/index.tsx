@@ -43,13 +43,13 @@ export const RequestQuotePrompt = ({
                 </LocalizedClientLink>
               </Dialog.Close>
             </li>
-            <li>Add products to your cart</li>
+            <li>Добавьте товары в корзину</li>
             <li>
               Open cart & click {'"'}Request a quote{'"'}
             </li>
           </ol>
 
-          <p>We will then get back to you as soon as possible over email</p>
+          <p>Менеджер ответит на почту с предложением по цене</p>
         </div>
       </Dialog.Content>
     </Dialog.Portal>

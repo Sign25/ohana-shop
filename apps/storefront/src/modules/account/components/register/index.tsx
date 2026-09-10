@@ -125,7 +125,7 @@ const Register = ({ setCurrentView, regions }: Props) => {
             onChange={handleChange}
           />
           <Input
-            label="First name"
+            label="Имя"
             name="first_name"
             required
             autoComplete="given-name"
@@ -135,7 +135,7 @@ const Register = ({ setCurrentView, regions }: Props) => {
             onChange={handleChange}
           />
           <Input
-            label="Last name"
+            label="Фамилия"
             name="last_name"
             required
             autoComplete="family-name"
@@ -145,7 +145,7 @@ const Register = ({ setCurrentView, regions }: Props) => {
             onChange={handleChange}
           />
           <Input
-            label="Company name"
+            label="Компания / получатель груза"
             name="company_name"
             required
             autoComplete="organization"

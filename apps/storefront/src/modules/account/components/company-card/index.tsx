@@ -91,7 +91,7 @@ const CompanyCard = ({
           <div className="flex flex-col gap-y-2">
             <Text className="font-medium text-neutral-950">Phone</Text>
             <Input
-              label="Phone"
+              label="Телефон"
               name="phone"
               value={companyData.phone || ""}
               onChange={(e) =>
@@ -102,7 +102,7 @@ const CompanyCard = ({
           <div className="flex flex-col gap-y-2">
             <Text className="font-medium text-neutral-950">Address</Text>
             <Input
-              label="Address"
+              label="Адрес (улица, дом, офис или терминал ТК)"
               name="address"
               value={companyData.address || ""}
               onChange={(e) =>
@@ -113,7 +113,7 @@ const CompanyCard = ({
           <div className="flex flex-col gap-y-2">
             <Text className="font-medium text-neutral-950">City</Text>
             <Input
-              label="City"
+              label="Город"
               name="city"
               value={companyData.city || ""}
               onChange={(e) =>

@@ -146,7 +146,7 @@ const CartDrawer = ({
           <Drawer.Header className="flex self-center">
             <Drawer.Title>
               {totalItems > 0
-                ? `You have ${totalItems} items in your cart`
+                ? `В корзине ${totalItems} шт`
                 : "В корзине пока пусто"}
             </Drawer.Title>
           </Drawer.Header>
@@ -192,7 +192,7 @@ const CartDrawer = ({
                         className="w-full"
                         size="large"
                       >
-                        View Cart
+                        Открыть корзину
                       </Button>
                     </LocalizedClientLink>
                     <LocalizedClientLink href={checkoutPath}>

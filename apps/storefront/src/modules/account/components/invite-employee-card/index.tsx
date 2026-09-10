@@ -11,10 +11,10 @@ const InviteEmployeeCard = ({ company }: { company: QueryCompany }) => {
       <div className="grid small:grid-cols-4 grid-cols-2 gap-4 p-4 border-b border-neutral-200">
         <div className="flex flex-col gap-y-2">
           <Text className="font-medium text-neutral-950">Name</Text>
-          <Input name="first_name" label="First name" />
+          <Input name="first_name" label="Имя" />
         </div>
         <div className="flex flex-col gap-y-2 justify-end">
-          <Input name="last_name" label="Last name" />
+          <Input name="last_name" label="Фамилия" />
         </div>
         <div className="flex flex-col col-span-2 gap-y-2">
           <Text className="font-medium text-neutral-950">Email</Text>

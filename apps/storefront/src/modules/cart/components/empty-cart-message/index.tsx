@@ -1,25 +1,15 @@
-import InteractiveLink from "@/modules/common/components/interactive-link"
-import { Heading, Text } from "@medusajs/ui"
+import LocalizedClientLink from "@/modules/common/components/localized-client-link"
 
 const EmptyCartMessage = () => {
   return (
-    <div
-      className="py-48 px-2 flex flex-col justify-center items-start"
-      data-testid="empty-cart-message"
-    >
-      <Heading
-        level="h1"
-        className="flex flex-row text-3xl-regular gap-x-2 items-baseline"
-      >
-        Cart
-      </Heading>
-      <Text className="text-base-regular mt-4 mb-6 max-w-[32rem]">
-        You don&apos;t have anything in your cart. Let&apos;s change that, use
-        the link below to start browsing our products.
-      </Text>
-      <div>
-        <InteractiveLink href="/store">Explore products</InteractiveLink>
-      </div>
+    <div className="flex flex-col items-start gap-4 px-2 py-32" data-testid="empty-cart-message">
+      <h1 className="oh-h text-[30px]">Корзина пуста</h1>
+      <p className="max-w-[40ch] text-[14px] text-oh-graphite">
+        Добавьте товары размерным рядом со страницы товара. Минимальный оптовый заказ — 35 000 ₽, от 100 000 ₽ действует цена крупного опта.
+      </p>
+      <LocalizedClientLink href="/store" className="oh-btn">
+        Перейти в каталог
+      </LocalizedClientLink>
     </div>
   )
 }

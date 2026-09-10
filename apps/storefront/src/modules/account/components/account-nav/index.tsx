@@ -180,7 +180,7 @@ const AccountNav = ({
                 route={route!}
                 data-testid="company-link"
               >
-                Company
+                Компания
               </AccountNavLink>
             </li>
             <li>

@@ -1,29 +1,26 @@
 import LocalizedClientLink from "@/modules/common/components/localized-client-link"
-import LogoIcon from "@/modules/common/icons/logo"
-import MedusaCTA from "@/modules/layout/components/medusa-cta"
+import Image from "next/image"
 
-export default function CheckoutLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+/** Оформление заказа: спокойная шапка без меню, чтобы не уводить со страницы */
+export default function CheckoutLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mb-2 w-full bg-white relative small:min-h-screen">
-      <div className="h-16 bg-white">
-        <nav className="flex h-full items-center content-container justify-between">
-          <LocalizedClientLink className="hover:text-ui-fg-base" href="/">
-            <h1 className="text-base font-medium flex items-center">
-              <LogoIcon className="inline mr-2" />
-              Ohana Market
-            </h1>
+    <div className="relative mb-2 w-full bg-white small:min-h-screen">
+      <div className="border-b border-oh-line bg-white">
+        <nav className="content-container flex h-16 items-center justify-between">
+          <LocalizedClientLink href="/" aria-label="Ohana Market — на главную">
+            <Image src="/logo.png" alt="Ohana market" width={432} height={192} className="h-10 w-auto" />
           </LocalizedClientLink>
+          <div className="flex items-center gap-4 text-[13px] text-oh-graphite">
+            <span className="hidden small:inline">Вопросы по заказу:</span>
+            <a href="tel:+79914301730" className="font-semibold text-oh-ink hover:text-oh-azure">8 (991) 430-17-30</a>
+          </div>
         </nav>
       </div>
-      <div className="relative bg-neutral-100" data-testid="checkout-container">
+      <div className="relative bg-oh-paper/60" data-testid="checkout-container">
         {children}
       </div>
-      <div className="py-4 w-full flex items-center justify-center">
-        <MedusaCTA />
+      <div className="flex w-full items-center justify-center py-4 text-[12px] text-oh-muted">
+        © {new Date().getFullYear()} Ohana Market · безналичный расчёт по счёту, заказ в работу после оплаты
       </div>
     </div>
   )

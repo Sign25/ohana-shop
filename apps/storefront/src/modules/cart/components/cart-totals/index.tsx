@@ -2,91 +2,42 @@
 
 import { useCart } from "@/lib/context/cart-context"
 import { convertToLocale } from "@/lib/util/money"
+import { plural } from "@/lib/util/ohana"
 import Divider from "@/modules/common/components/divider"
-import { Text } from "@medusajs/ui"
 import React from "react"
 
 const CartTotals: React.FC = () => {
   const { isUpdatingCart, cart } = useCart()
-
   if (!cart) return null
 
-  const {
-    currency_code,
-    total,
-    item_subtotal,
-    tax_total,
-    shipping_total,
-    discount_total,
-    gift_card_total,
-  } = cart
+  const { currency_code, total, item_subtotal, shipping_total, discount_total } = cart
+  const qty = cart.items?.reduce((a: number, i: any) => a + i.quantity, 0) || 0
+  const tier = cart.items?.some((i: any) => i.metadata?.tier === "krupny") ? "крупный опт" : "опт"
+  const money = (a?: number | null) => convertToLocale({ amount: a ?? 0, currency_code })
 
   return (
-    <div>
-      <div className="flex flex-col gap-y-2 txt-medium text-ui-fg-subtle ">
-        <div className="flex items-center justify-between">
-          <Text className="flex gap-x-1 items-center">
-            Subtotal (excl. shipping and taxes)
-          </Text>
-          <Text
-            data-testid="cart-item-subtotal"
-            data-value={item_subtotal || 0}
-          >
-            {convertToLocale({ amount: item_subtotal ?? 0, currency_code })}
-          </Text>
-        </div>
-        {!!discount_total && (
-          <div className="flex items-center justify-between">
-            <Text>Discount</Text>
-            <Text
-              className="text-ui-fg-interactive"
-              data-testid="cart-discount"
-              data-value={discount_total || 0}
-            >
-              -{" "}
-              {convertToLocale({ amount: discount_total ?? 0, currency_code })}
-            </Text>
-          </div>
-        )}
-        <div className="flex items-center justify-between">
-          <Text>Shipping</Text>
-          <Text data-testid="cart-shipping" data-value={shipping_total || 0}>
-            {convertToLocale({ amount: shipping_total ?? 0, currency_code })}
-          </Text>
-        </div>
-        <div className="flex justify-between">
-          <Text className="flex gap-x-1 items-center ">Taxes</Text>
-          <Text data-testid="cart-taxes" data-value={tax_total || 0}>
-            {convertToLocale({ amount: tax_total ?? 0, currency_code })}
-          </Text>
-        </div>
-        {!!gift_card_total && (
-          <div className="flex items-center justify-between">
-            <Text>Gift card</Text>
-            <Text
-              className="text-ui-fg-interactive"
-              data-testid="cart-gift-card-amount"
-              data-value={gift_card_total || 0}
-            >
-              -{" "}
-              {convertToLocale({ amount: gift_card_total ?? 0, currency_code })}
-            </Text>
-          </div>
-        )}
+    <div className="flex flex-col gap-y-1.5 text-[13px] text-oh-graphite">
+      <div className="flex justify-between">
+        <span>{qty} {plural(qty, "штука", "штуки", "штук")} · цена «{tier}»</span>
+        <span data-testid="cart-item-subtotal" data-value={item_subtotal || 0}>{money(item_subtotal)}</span>
       </div>
-      <Divider className="my-2" />
-      <div className="flex items-center justify-between text-ui-fg-base mb-2 txt-medium ">
-        <Text className="font-medium">Total</Text>
+      {!!discount_total && (
+        <div className="flex justify-between">
+          <span>Скидка</span>
+          <span className="text-oh-azure" data-testid="cart-discount">− {money(discount_total)}</span>
+        </div>
+      )}
+      <div className="flex justify-between">
+        <span>Доставка</span>
+        <span data-testid="cart-shipping">{shipping_total ? money(shipping_total) : "до терминала ТК в Омске бесплатно"}</span>
+      </div>
+      <Divider className="my-1" />
+      <div className="flex items-center justify-between text-oh-ink">
+        <span className="font-medium">Итого</span>
         {isUpdatingCart ? (
-          <div className="w-28 h-6 mt-[3px] bg-neutral-200 rounded-full animate-pulse" />
+          <div className="h-6 w-28 animate-pulse rounded-full bg-oh-line" />
         ) : (
-          <Text
-            className="txt-xlarge-plus"
-            data-testid="cart-total"
-            data-value={total || 0}
-          >
-            {convertToLocale({ amount: total ?? 0, currency_code })}
-          </Text>
+          <span className="text-[20px] font-semibold" data-testid="cart-total" data-value={total || 0}>{money(total)}</span>
         )}
       </div>
     </div>

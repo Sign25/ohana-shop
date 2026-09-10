@@ -24,7 +24,7 @@ const CartToCsvButton = ({ cart }: CartToCsvButtonProps) => {
     try {
       if (window.showSaveFilePicker) {
         const fileHandle = await window.showSaveFilePicker({
-          suggestedName: "cart.csv",
+          suggestedName: "korzina-ohana.csv",
           startIn: "downloads",
           types: [
             { description: "CSV File", accept: { "text/csv": [".csv"] } },
@@ -57,7 +57,7 @@ const CartToCsvButton = ({ cart }: CartToCsvButtonProps) => {
         onClick={handleExportCart}
         isLoading={isExportingCart}
       >
-        Export Cart (.csv)
+        Скачать корзину (.csv)
       </Button>
       {error && <Text className="text-red-500">{error}</Text>}
     </div>

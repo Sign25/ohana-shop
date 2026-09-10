@@ -8,7 +8,7 @@ import { Metadata } from "next"
 import { notFound } from "next/navigation"
 
 export const metadata: Metadata = {
-  title: "Checkout",
+  title: "Оформление заказа",
 }
 
 export default async function Checkout({
@@ -27,7 +27,7 @@ export default async function Checkout({
 
   return (
     <Wrapper cart={cart}>
-      <div className="grid grid-cols-1 small:grid-cols-[1fr_416px] content-container gap-2 py-24 h-full">
+      <div className="grid grid-cols-1 small:grid-cols-[1fr_416px] content-container gap-3 py-8 h-full">
         <CheckoutForm cart={cart} customer={customer} />
         <div className="relative">
           <CheckoutSummary cart={cart} />
