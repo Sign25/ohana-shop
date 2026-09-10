@@ -1,8 +1,16 @@
 import { plural, productSummary } from "@/lib/util/ohana"
+import LocalizedClientLink from "@/modules/common/components/localized-client-link"
 import { HttpTypes } from "@medusajs/types"
+
+const fmtDate = (d?: string | null) => {
+  const m = String(d || "").match(/^(\d{4})-(\d{2})-(\d{2})/)
+  return m ? `${m[3]}.${m[2]}.${m[1]}` : d || ""
+}
 
 const ProductFacts = ({ product }: { product: HttpTypes.StoreProduct }) => {
   const s = productSummary(product)
+  const m = (product.metadata || {}) as Record<string, any>
+  const cert = String(m.cert_doc || "").replace(/¶/g, "").trim()
   const dot = (ok: boolean) => (
     <span className={`inline-block h-2 w-2 rounded-full ${ok ? "bg-oh-mint-deep" : "bg-oh-line-2"}`} />
   )
@@ -26,6 +34,18 @@ const ProductFacts = ({ product }: { product: HttpTypes.StoreProduct }) => {
         {dot(true)}
         Отгрузка со склада в Омске 24–48 часов, доставка до терминала ТК бесплатно
       </span>
+      {cert && (
+        <span className="flex items-start gap-2">
+          <span className="mt-1.5">{dot(true)}</span>
+          <span>
+            Сертификат {cert}
+            {m.cert_until ? ` действует до ${fmtDate(m.cert_until)}` : ""} ·{" "}
+            <LocalizedClientLink href="/p/sertificat" className="text-oh-azure hover:underline">
+              документы для маркетплейсов
+            </LocalizedClientLink>
+          </span>
+        </span>
+      )}
     </div>
   )
 }

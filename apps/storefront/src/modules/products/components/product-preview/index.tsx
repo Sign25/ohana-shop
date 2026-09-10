@@ -1,8 +1,8 @@
 import { formatRub, plural, productSummary } from "@/lib/util/ohana"
+import CardImage from "@/modules/products/components/card-image"
 import LocalizedClientLink from "@/modules/common/components/localized-client-link"
 import { HttpTypes } from "@medusajs/types"
 import { clx } from "@medusajs/ui"
-import Image from "next/image"
 
 /**
  * Карточка товара в каталоге: фото 3:4, артикул, название, цена опт / крупный опт,
@@ -31,18 +31,11 @@ export default async function ProductPreview({
   return (
     <LocalizedClientLink href={`/products/${product.handle}`} className="group block h-full" data-testid="product-wrapper">
       <div className="oh-card flex h-full flex-col overflow-hidden transition-shadow group-hover:shadow-[0_10px_30px_rgba(74,74,74,0.10)]">
-        <div className="relative aspect-[3/4] w-full bg-oh-paper">
+        <div className="relative">
           {img ? (
-            <Image
-              src={img}
-              alt={product.title}
-              fill
-              sizes="(max-width: 512px) 50vw, (max-width: 1024px) 33vw, 25vw"
-              className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-              draggable={false}
-            />
+            <CardImage src={img} alt={product.title} />
           ) : (
-            <div className="absolute inset-0 flex items-center justify-center text-oh-muted text-xs">нет фото</div>
+            <div className="flex aspect-[3/4] items-center justify-center bg-white text-xs text-oh-muted">нет фото</div>
           )}
           {s.stock <= 0 && (
             <span className="absolute left-3 top-3 rounded-pill bg-white/90 px-2.5 py-1 text-[12px] font-medium text-oh-graphite">
