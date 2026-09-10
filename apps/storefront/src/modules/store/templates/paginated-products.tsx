@@ -1,22 +1,27 @@
-import { listProducts } from "@/lib/data/products"
+import { CatalogFilters, CatalogOrder, searchCatalog } from "@/lib/data/catalog"
+import { getProductsById, listProducts } from "@/lib/data/products"
 import { getRegion } from "@/lib/data/regions"
 import { plural } from "@/lib/util/ohana"
 import ProductPreview from "@/modules/products/components/product-preview"
+import CatalogFiltersBar from "@/modules/store/components/catalog-filters"
 import { Pagination } from "@/modules/store/components/pagination"
 import { SortOptions } from "@/modules/store/components/refinement-list/sort-products"
 import { B2BCustomer } from "@/types"
+import { HttpTypes } from "@medusajs/types"
 
 export const PRODUCT_LIMIT = 24
 
-const ORDER: Record<SortOptions, string> = {
-  created_at: "-created_at",
+const ORDER: Record<SortOptions, CatalogOrder> = {
+  created_at: "new",
   title: "title",
+  price_asc: "price_asc",
+  price_desc: "price_desc",
 }
 
 /**
- * Серверная пагинация: стартер тянул первые 100 товаров и сортировал их в памяти,
- * поэтому каталог из 710 позиций «заканчивался» на сотне. Теперь limit/offset/order
- * уходят в Store API, а count — настоящий.
+ * Список товаров раздела/поиска. Порядок и фильтры (размер, цена, наличие) считает наш маршрут
+ * /store/ohana/catalog — он отдаёт id и фасеты, сами карточки берём штатным Store API по id.
+ * Пагинация серверная: стартер тянул первые 100 товаров и сортировал их в памяти.
  */
 export default async function PaginatedProducts({
   sortBy,
@@ -27,6 +32,7 @@ export default async function PaginatedProducts({
   productsIds,
   countryCode,
   q,
+  filters,
 }: {
   sortBy?: SortOptions
   page: number
@@ -38,35 +44,46 @@ export default async function PaginatedProducts({
   customer?: B2BCustomer | null
   optionValueIds?: string[]
   q?: string
+  filters?: CatalogFilters
 }) {
   const region = await getRegion(countryCode)
   if (!region) return null
 
-  const queryParams: Record<string, any> = {
-    limit: PRODUCT_LIMIT,
-    order: ORDER[sortBy || "created_at"] || "-created_at",
-    fields: "*variants.calculated_price,+variants.inventory_quantity,+variants.metadata,+metadata",
-  }
-  if (collectionId) queryParams.collection_id = [collectionId]
-  // товары привязаны к листовым категориям, поэтому для раздела передаём его и всех потомков
-  if (categoryIds?.length) queryParams.category_id = categoryIds
-  else if (categoryId) queryParams.category_id = [categoryId]
-  if (productsIds) queryParams.id = productsIds
-  if (q) queryParams.q = q
+  let products: HttpTypes.StoreProduct[] = [], count = 0, facets = null as Awaited<ReturnType<typeof searchCatalog>>["facets"] | null
 
-  const {
-    response: { products, count },
-  } = await listProducts({ pageParam: page, queryParams, countryCode })
+  if (collectionId || productsIds) {
+    // коллекции и явные списки — штатным API (без фильтров)
+    const queryParams: Record<string, any> = { limit: PRODUCT_LIMIT, order: "-created_at", fields: "*variants.calculated_price,+variants.inventory_quantity,+variants.metadata,+metadata" }
+    if (collectionId) queryParams.collection_id = [collectionId]
+    if (productsIds) queryParams.id = productsIds
+    const r = await listProducts({ pageParam: page, queryParams, countryCode })
+    products = r.response.products; count = r.response.count
+  } else {
+    const found = await searchCatalog({
+      categoryIds: categoryIds?.length ? categoryIds : categoryId ? [categoryId] : undefined,
+      q, filters, order: ORDER[sortBy || "created_at"] || "new", limit: PRODUCT_LIMIT, offset: (Math.max(page, 1) - 1) * PRODUCT_LIMIT,
+    })
+    count = found.count; facets = found.facets
+    if (found.ids.length) {
+      const got = await getProductsById({ ids: found.ids, regionId: region.id })
+      const byId = new Map(got.map((p) => [p.id, p]))
+      products = found.ids.map((id) => byId.get(id)).filter(Boolean) as HttpTypes.StoreProduct[]
+    }
+  }
 
   const totalPages = Math.ceil(count / PRODUCT_LIMIT)
+  const filtered = !!(filters && ((filters.size && filters.size.length) || filters.pmin || filters.pmax || filters.stock))
 
   return (
     <>
+      {facets && (facets.sizes.length > 1 || facets.in_stock > 0) && <CatalogFiltersBar facets={facets} filters={filters || {}} />}
       <div className="mb-3 text-sm text-oh-muted">
         {count > 0
-          ? `${count} ${plural(count, "товар", "товара", "товаров")}${q ? ` по запросу «${q}»` : ""}`
+          ? `${count} ${plural(count, "товар", "товара", "товаров")}${q ? ` по запросу «${q}»` : ""}${filtered ? " по фильтру" : ""}`
           : q
           ? `По запросу «${q}» ничего не нашлось`
+          : filtered
+          ? "По таким условиям ничего не нашлось — попробуйте снять часть фильтров"
           : "В этом разделе пока нет товаров"}
       </div>
       {products.length > 0 && (

@@ -46,7 +46,23 @@ const RefinementList = ({ sortBy, "data-testid": dataTestId, categories, current
       <div className="oh-card">
         <SortProducts sortBy={sortBy} setQueryParams={setQueryParams} data-testid={dataTestId} />
       </div>
-      {categories && <CategoryList categories={categories} currentCategory={currentCategory} />}
+      {categories && (
+        <>
+          {/* на телефоне дерево разделов свёрнуто, иначе товары уезжают под длинный список */}
+          <details className="oh-card group small:hidden">
+            <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-sm font-semibold text-oh-ink [&::-webkit-details-marker]:hidden">
+              Разделы каталога
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" className="text-oh-muted transition-transform group-open:rotate-180" aria-hidden><path d="M6 9l6 6 6-6" /></svg>
+            </summary>
+            <div className="border-t border-oh-line">
+              <CategoryList categories={categories} currentCategory={currentCategory} bare />
+            </div>
+          </details>
+          <div className="hidden small:block">
+            <CategoryList categories={categories} currentCategory={currentCategory} />
+          </div>
+        </>
+      )}
     </div>
   )
 }

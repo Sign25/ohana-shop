@@ -1,3 +1,4 @@
+import { CatalogFilters } from "@/lib/data/catalog"
 import CategoryBreadcrumb from "@/modules/categories/category-breadcrumb"
 import LocalizedClientLink from "@/modules/common/components/localized-client-link"
 import SkeletonProductGrid from "@/modules/skeletons/templates/skeleton-product-grid"
@@ -14,12 +15,14 @@ export default function CategoryTemplate({
   sortBy,
   page,
   countryCode,
+  filters,
 }: {
   categories: HttpTypes.StoreProductCategory[]
   currentCategory: HttpTypes.StoreProductCategory
   sortBy?: SortOptions
   page?: string
   countryCode: string
+  filters?: CatalogFilters
 }) {
   const pageNumber = page ? parseInt(page) : 1
   const sort = sortBy || "created_at"
@@ -48,7 +51,7 @@ export default function CategoryTemplate({
           <RefinementList sortBy={sort} categories={categories} currentCategory={currentCategory} listName={currentCategory.name} data-testid="sort-by-container" hideOptionsPicker />
           <div className="w-full">
             <Suspense fallback={<SkeletonProductGrid />}>
-              <PaginatedProducts sortBy={sort} page={pageNumber} categoryIds={categoryIds} countryCode={countryCode} />
+              <PaginatedProducts sortBy={sort} page={pageNumber} categoryIds={categoryIds} countryCode={countryCode} filters={filters} />
             </Suspense>
           </div>
         </div>

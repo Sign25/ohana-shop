@@ -1,3 +1,4 @@
+import { parseCatalogFilters } from "@/lib/data/catalog"
 import { listCategoryTree } from "@/lib/data/categories"
 import SkeletonProductGrid from "@/modules/skeletons/templates/skeleton-product-grid"
 import RefinementList from "@/modules/store/components/refinement-list"
@@ -15,7 +16,7 @@ export const metadata: Metadata = {
 }
 
 type Params = {
-  searchParams: Promise<{ sortBy?: SortOptions; page?: string; q?: string }>
+  searchParams: Promise<{ sortBy?: SortOptions; page?: string; q?: string; size?: string; pmin?: string; pmax?: string; stock?: string }>
   params: Promise<{ countryCode: string }>
 }
 
@@ -26,6 +27,7 @@ export default async function StorePage(props: Params) {
   const sort = sortBy || "created_at"
   const pageNumber = page ? parseInt(page) : 1
   const categories = await listCategoryTree()
+  const filters = await parseCatalogFilters(searchParams)
 
   return (
     <div className="bg-oh-paper/60">
@@ -36,7 +38,7 @@ export default async function StorePage(props: Params) {
           <RefinementList sortBy={sort} categories={categories} />
           <div className="w-full">
             <Suspense fallback={<SkeletonProductGrid />}>
-              <PaginatedProducts sortBy={sort} page={pageNumber} countryCode={params.countryCode} q={q} />
+              <PaginatedProducts sortBy={sort} page={pageNumber} countryCode={params.countryCode} q={q} filters={filters} />
             </Suspense>
           </div>
         </div>

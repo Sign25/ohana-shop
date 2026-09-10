@@ -9,7 +9,7 @@ import { useState } from "react"
 type Cat = HttpTypes.StoreProductCategory
 
 /** Боковое дерево каталога: разделы → подразделы; сезонные подборки отдельным блоком. */
-const CategoryList = ({ categories, currentCategory }: { categories: Cat[]; currentCategory?: Cat }) => {
+const CategoryList = ({ categories, currentCategory, bare }: { categories: Cat[]; currentCategory?: Cat; bare?: boolean }) => {
   const isShowcase = (c: Cat) => (c.metadata as any)?.kind === "showcase"
   const roots = categories.filter((c) => !c.parent_category_id && !isShowcase(c))
   const showcases = visibleShowcases(categories)
@@ -23,8 +23,8 @@ const CategoryList = ({ categories, currentCategory }: { categories: Cat[]; curr
     setExpanded((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
 
   return (
-    <div className="oh-card">
-      <div className="flex items-center justify-between border-b border-oh-line px-4 py-3">
+    <div className={bare ? "" : "oh-card"}>
+      <div className={clx("flex items-center justify-between border-b border-oh-line px-4 py-3", bare && "hidden")}>
         <span className="text-sm font-semibold text-oh-ink">Каталог</span>
         {currentCategory && (
           <LocalizedClientLink href="/store" className="text-xs text-oh-muted hover:text-oh-azure">

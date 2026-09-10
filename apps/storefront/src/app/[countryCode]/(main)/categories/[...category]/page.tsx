@@ -1,3 +1,4 @@
+import { parseCatalogFilters } from "@/lib/data/catalog"
 import { getCategoryByHandle, listCategories } from "@/lib/data/categories"
 import { listRegions } from "@/lib/data/regions"
 import CategoryTemplate from "@/modules/categories/templates"
@@ -12,6 +13,10 @@ type Props = {
   searchParams: Promise<{
     sortBy?: SortOptions
     page?: string
+    size?: string
+    pmin?: string
+    pmax?: string
+    stock?: string
   }>
 }
 
@@ -66,6 +71,7 @@ export default async function CategoryPage(props: Props) {
   const searchParams = await props.searchParams
   const params = await props.params
   const { sortBy, page } = searchParams
+  const filters = await parseCatalogFilters(searchParams)
 
   const categories = await listCategories()
 
@@ -84,6 +90,7 @@ export default async function CategoryPage(props: Props) {
       sortBy={sortBy}
       page={page}
       countryCode={params.countryCode}
+      filters={filters}
     />
   )
 }
