@@ -18,7 +18,9 @@ const ProductVariantsTable = ({ product, region }: { product: HttpTypes.StorePro
   const [lines, setLines] = useState<Map<string, Line>>(new Map())
   const [fillKey, setFillKey] = useState(0) // перерисовка счётчиков после быстрой заливки
 
-  const variants = product.variants || []
+  // размеры по возрастанию (по ведущему числу: «40-42 164…» < «52-54 170…»; буквенные — как пришли)
+  const sizeNum = (v: any) => { const m = String(v.metadata?.size || v.title || "").match(/\d+/); return m ? Number(m[0]) : Number.MAX_SAFE_INTEGER }
+  const variants = [...(product.variants || [])].sort((a, b) => sizeNum(a) - sizeNum(b))
   const stepOf = (v: any) => Math.max(1, Number(v.metadata?.qty_step) || 1)
   const stockOf = (v: any): number | undefined => (typeof v.inventory_quantity === "number" ? v.inventory_quantity : undefined)
   const priceOf = (v: any) => getProductPrice({ product, variantId: v.id }).variantPrice

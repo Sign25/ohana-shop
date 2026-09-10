@@ -17,6 +17,8 @@ export default async function ProductPreview({
 }) {
   if (!product) return null
   const s = productSummary(product)
+  const colorLabel = String((product.metadata as any)?.color_label || "").trim()
+  const colorHint = colorLabel && !product.title.toLowerCase().includes(colorLabel.toLowerCase().split(/[ ,]/)[0].replace(/(ый|ая|ое|ые|ий|яя)$/, "")) ? colorLabel : ""
   const img = product.thumbnail || product.images?.[0]?.url
   // подпись о наличии только когда есть что сказать: распродано или ряд неполный
   const stockLabel =
@@ -58,6 +60,8 @@ export default async function ProductPreview({
           <div className="line-clamp-2 min-h-[2.6em] text-[13.5px] font-medium leading-snug text-oh-ink" data-testid="product-title">
             {product.title}
           </div>
+          {/* цвет из 1С, если он не входит в название (в каталоге «Номенклатура 2026» одно название на несколько расцветок) */}
+          {colorHint && <div className="-mt-1 text-[12px] text-oh-muted">{colorHint}</div>}
           <div className="mt-auto flex flex-col gap-0.5 pt-1">
             {s.minPrice !== null ? (
               <div className="text-[17px] font-semibold text-oh-ink" data-testid="price">
