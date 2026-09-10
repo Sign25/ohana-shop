@@ -19,6 +19,7 @@ export const metadata: Metadata = {
     template: "%s | Ohana Market",
   },
   icons: { icon: "/favicon.ico" },
+  robots: process.env.NEXT_PUBLIC_NOINDEX === "1" ? { index: false, follow: false } : undefined,
 }
 
 export default function RootLayout(props: { children: React.ReactNode }) {
