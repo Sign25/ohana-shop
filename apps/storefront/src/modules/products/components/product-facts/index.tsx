@@ -1,43 +1,30 @@
-import {
-  CheckCircleSolid,
-  ExclamationCircleSolid,
-  InformationCircleSolid,
-} from "@medusajs/icons"
+import { plural, productSummary } from "@/lib/util/ohana"
 import { HttpTypes } from "@medusajs/types"
 
 const ProductFacts = ({ product }: { product: HttpTypes.StoreProduct }) => {
-  const managedVariants = product.variants?.filter(
-    (variant) => variant.manage_inventory !== false
+  const s = productSummary(product)
+  const dot = (ok: boolean) => (
+    <span className={`inline-block h-2 w-2 rounded-full ${ok ? "bg-oh-mint-deep" : "bg-oh-line-2"}`} />
   )
-
-  const inventoryQuantity =
-    managedVariants?.reduce(
-      (acc, variant) => acc + (variant.inventory_quantity ?? 0),
-      0
-    ) || 0
-
-  const hasManageInventory = !!managedVariants?.length
-
   return (
-    <div className="flex flex-col gap-y-2 w-full">
-      {hasManageInventory && (inventoryQuantity > 10 ? (
-        <span className="flex items-center gap-x-2 text-neutral-600 text-sm">
-          <CheckCircleSolid className="text-green-500" /> Can be shipped
-          immediately ({inventoryQuantity} in stock)
+    <div className="flex w-full flex-col gap-1.5 text-[13px] text-oh-graphite">
+      <span className="flex items-center gap-2">
+        {dot(s.stock > 0)}
+        {s.stock > 0
+          ? `В наличии ${s.stock} шт · ${s.inStockSizes} из ${s.sizesTotal} ${plural(s.sizesTotal, "размера", "размеров", "размеров")}`
+          : "Нет в наличии — оставьте заявку, сообщим о поступлении"}
+      </span>
+      {s.packQty && s.packQty > 1 && (
+        <span className="flex items-center gap-2">
+          {dot(true)}
+          {s.packUnit === "Y"
+            ? `Продаётся упаковками по ${s.packQty} шт`
+            : `В упаковке ${s.packQty} шт — заказ кратно упаковке`}
         </span>
-      ) : (
-        <span className="flex items-center gap-x-2 text-neutral-600 text-sm ">
-          <ExclamationCircleSolid className="text-orange-500" />
-          Limited quantity available ({inventoryQuantity} in stock)
-        </span>
-      ))}
-      <span className="flex items-center gap-x-2 text-neutral-600 text-sm">
-        {product.mid_code && (
-          <>
-            <InformationCircleSolid />
-            MID: {product.mid_code}
-          </>
-        )}
+      )}
+      <span className="flex items-center gap-2">
+        {dot(true)}
+        Отгрузка со склада в Омске 24–48 часов, доставка до терминала ТК бесплатно
       </span>
     </div>
   )

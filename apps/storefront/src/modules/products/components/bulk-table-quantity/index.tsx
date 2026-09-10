@@ -5,84 +5,71 @@ import { useEffect, useState } from "react"
 type BulkTableQuantityProps = {
   variantId: string
   onChange: (variantId: string, quantity: number) => void
+  /** кратность заказа (вложение упаковки из 1С), по умолчанию 1 */
+  step?: number
+  /** доступный остаток; 0 — размер закончился */
+  max?: number
 }
 
-const BulkTableQuantity = ({ variantId, onChange }: BulkTableQuantityProps) => {
+/** Счётчик количества в таблице размеров: шаг = упаковка, Shift — ×10 шагов, не больше остатка */
+const BulkTableQuantity = ({ variantId, onChange, step = 1, max }: BulkTableQuantityProps) => {
   const [quantity, setQuantity] = useState("0")
   const [shiftPressed, setShiftPressed] = useState(false)
+  const s = Math.max(1, step || 1)
+  const limit = typeof max === "number" ? Math.max(0, max) : Infinity
+  const clamp = (q: number) => Math.min(limit, Math.max(0, q))
+  const roundToStep = (q: number) => (s > 1 ? Math.ceil(q / s) * s : q)
+
+  const apply = (q: number) => {
+    const v = clamp(q)
+    setQuantity(v.toString())
+    onChange(variantId, v)
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setQuantity(e.target.value)
-    onChange(variantId, Number(e.target.value))
+    onChange(variantId, clamp(Number(e.target.value) || 0))
   }
-
-  const handleAdd = () => {
-    const q = Math.max(Number(quantity) + (shiftPressed ? 10 : 1), 0)
-    setQuantity(q.toString())
-    onChange(variantId, q)
-  }
-
-  const handleSubtract = () => {
-    const q = Math.max(Number(quantity) - (shiftPressed ? 10 : 1), 0)
-    setQuantity(q.toString())
-    onChange(variantId, q)
-  }
+  const handleBlur = () => apply(roundToStep(Number(quantity) || 0))
+  const handleAdd = () => apply(Number(quantity) + s * (shiftPressed ? 10 : 1))
+  const handleSubtract = () => apply(Number(quantity) - s * (shiftPressed ? 10 : 1))
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "ArrowUp") {
-      e.preventDefault()
-      handleAdd()
-    }
-
-    if (e.key === "ArrowDown") {
-      e.preventDefault()
-      handleSubtract()
-    }
+    if (e.key === "ArrowUp") { e.preventDefault(); handleAdd() }
+    if (e.key === "ArrowDown") { e.preventDefault(); handleSubtract() }
   }
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Shift") {
-        setShiftPressed(true)
-      }
-    }
-
-    const handleKeyUp = (e: KeyboardEvent) => {
-      if (e.key === "Shift") {
-        setShiftPressed(false)
-      }
-    }
-
-    window.addEventListener("keydown", handleKeyDown)
-    window.addEventListener("keyup", handleKeyUp)
-
+    const down = (e: KeyboardEvent) => e.key === "Shift" && setShiftPressed(true)
+    const up = (e: KeyboardEvent) => e.key === "Shift" && setShiftPressed(false)
+    window.addEventListener("keydown", down)
+    window.addEventListener("keyup", up)
     return () => {
-      window.removeEventListener("keydown", handleKeyDown)
-      window.removeEventListener("keyup", handleKeyUp)
+      window.removeEventListener("keydown", down)
+      window.removeEventListener("keyup", up)
     }
   }, [])
 
+  const soldOut = limit === 0
+
   return (
-    <div className="flex flex-row justify-between gap-2 w-full">
-      <IconButton
-        onClick={() => handleSubtract()}
-        className="rounded-full hover:bg-neutral-200"
-        variant="transparent"
-      >
+    <div className="flex w-full flex-row items-center justify-between gap-1">
+      <IconButton onClick={handleSubtract} disabled={soldOut || Number(quantity) <= 0} className="rounded-full hover:bg-oh-paper" variant="transparent" aria-label="Меньше">
         <MinusMini />
       </IconButton>
       <Input
         value={quantity}
-        onChange={(e) => handleChange(e)}
+        onChange={handleChange}
+        onBlur={handleBlur}
         onKeyDown={handleKeyDown}
         type="number"
-        className="max-w-10 text-center items-center justify-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+        min={0}
+        step={s}
+        disabled={soldOut}
+        title={soldOut ? "Размер закончился" : s > 1 ? `Кратно ${s} шт` : undefined}
+        className="max-w-12 items-center justify-center text-center [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
       />
-      <IconButton
-        onClick={() => handleAdd()}
-        className="rounded-full hover:bg-neutral-200"
-        variant="transparent"
-      >
+      <IconButton onClick={handleAdd} disabled={soldOut || Number(quantity) + s > limit} className="rounded-full hover:bg-oh-paper" variant="transparent" aria-label="Больше">
         <PlusMini />
       </IconButton>
     </div>

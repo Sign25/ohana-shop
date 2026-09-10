@@ -1,30 +1,21 @@
 import LocalizedClientLink from "@/modules/common/components/localized-client-link"
 
-const StoreBreadcrumbItem = ({
-  title,
-  handle,
-}: {
-  title: string
-  handle?: string
-}) => {
+const StoreBreadcrumb = ({ current = "Все товары" }: { current?: string }) => {
   return (
-    <li className="text-neutral-500">
-      <LocalizedClientLink
-        className="hover:text-neutral-900"
-        href={handle ? `${handle}` : "/store"}
-      >
-        {title}
-      </LocalizedClientLink>
-    </li>
-  )
-}
-
-const StoreBreadcrumb = () => {
-  return (
-    <ul className="flex items-center gap-x-3 text-sm">
-      <StoreBreadcrumbItem title="Products" key="base" />
-      <span className="text-neutral-500">{">"}</span>
-      <StoreBreadcrumbItem title="All products" handle="/store" />
+    <ul className="flex items-center gap-x-2 text-[13px] text-oh-muted">
+      <li>
+        <LocalizedClientLink className="hover:text-oh-azure" href="/">
+          Главная
+        </LocalizedClientLink>
+      </li>
+      <li>›</li>
+      <li>
+        <LocalizedClientLink className="hover:text-oh-azure" href="/store">
+          Каталог
+        </LocalizedClientLink>
+      </li>
+      <li>›</li>
+      <li className="text-oh-graphite">{current}</li>
     </ul>
   )
 }

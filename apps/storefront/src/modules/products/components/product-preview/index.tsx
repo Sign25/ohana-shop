@@ -1,75 +1,83 @@
-import { getProductPrice } from "@/lib/util/get-product-price"
-import { HttpTypes } from "@medusajs/types"
-import { Text, clx } from "@medusajs/ui"
+import { formatRub, plural, productSummary } from "@/lib/util/ohana"
 import LocalizedClientLink from "@/modules/common/components/localized-client-link"
-import Thumbnail from "../thumbnail"
-import PreviewAddToCart from "./preview-add-to-cart"
-import PreviewPrice from "./price"
+import { HttpTypes } from "@medusajs/types"
+import { clx } from "@medusajs/ui"
+import Image from "next/image"
 
+/**
+ * Карточка товара в каталоге: фото 3:4, артикул, название, цена опт / крупный опт,
+ * наличие по размерам и упаковка. Без быстрой корзины: опт заказывают размерным рядом на странице товара.
+ */
 export default async function ProductPreview({
   product,
-  isFeatured,
-  region,
 }: {
   product: HttpTypes.StoreProduct
   isFeatured?: boolean
-  region: HttpTypes.StoreRegion
+  region?: HttpTypes.StoreRegion
 }) {
-  if (!product) {
-    return null
-  }
-
-  const { cheapestPrice } = getProductPrice({
-    product,
-  })
-
-  const inventoryQuantity = product.variants?.reduce((acc, variant) => {
-    return acc + (variant?.inventory_quantity || 0)
-  }, 0)
+  if (!product) return null
+  const s = productSummary(product)
+  const img = product.thumbnail || product.images?.[0]?.url
+  const stockLabel =
+    s.stock <= 0
+      ? "Нет в наличии"
+      : s.inStockSizes < s.sizesTotal
+      ? `${s.inStockSizes} из ${s.sizesTotal} ${plural(s.sizesTotal, "размера", "размеров", "размеров")}`
+      : "Все размеры в наличии"
 
   return (
-    <LocalizedClientLink href={`/products/${product.handle}`} className="group">
-      <div
-        data-testid="product-wrapper"
-        className="flex flex-col gap-4 relative aspect-[3/5] w-full overflow-hidden p-4 bg-white shadow-borders-base rounded-lg group-hover:shadow-[0_0_0_4px_rgba(0,0,0,0.1)] transition-shadow ease-in-out duration-150"
-      >
-        <div className="w-full h-full p-10">
-          <Thumbnail
-            thumbnail={product.thumbnail}
-            images={product.images}
-            size="square"
-            isFeatured={isFeatured}
-          />
-        </div>
-        <div className="flex flex-col txt-compact-medium">
-          <Text className="text-neutral-600 text-xs">BRAND</Text>
-          <Text className="text-ui-fg-base" data-testid="product-title">
-            {product.title}
-          </Text>
-        </div>
-        <div className="flex flex-col gap-0">
-          {cheapestPrice && <PreviewPrice price={cheapestPrice} />}
-          <Text className="text-neutral-600 text-[0.6rem]">Excl. VAT</Text>
-        </div>
-        <div className="flex justify-between">
-          <div className="flex flex-row gap-1 items-center">
-            <span
-              className={clx({
-                "text-green-500": inventoryQuantity && inventoryQuantity > 50,
-                "text-orange-500":
-                  inventoryQuantity &&
-                  inventoryQuantity <= 50 &&
-                  inventoryQuantity > 0,
-                "text-red-500": inventoryQuantity === 0,
-              })}
-            >
-              •
+    <LocalizedClientLink href={`/products/${product.handle}`} className="group block h-full" data-testid="product-wrapper">
+      <div className="oh-card flex h-full flex-col overflow-hidden transition-shadow group-hover:shadow-[0_10px_30px_rgba(74,74,74,0.10)]">
+        <div className="relative aspect-[3/4] w-full bg-oh-paper">
+          {img ? (
+            <Image
+              src={img}
+              alt={product.title}
+              fill
+              sizes="(max-width: 512px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+              draggable={false}
+            />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center text-oh-muted text-xs">нет фото</div>
+          )}
+          {s.stock <= 0 && (
+            <span className="absolute left-3 top-3 rounded-pill bg-white/90 px-2.5 py-1 text-[11px] font-medium text-oh-graphite">
+              Всё разобрали
             </span>
-            <Text className="text-neutral-600 text-xs">
-              {inventoryQuantity} left
-            </Text>
+          )}
+          {s.packUnit && s.packUnit !== "N" && (
+            <span className="absolute right-3 top-3 rounded-pill bg-oh-mint-deep px-2.5 py-1 text-[11px] font-medium text-white">
+              Упаковка
+            </span>
+          )}
+        </div>
+        <div className="flex flex-1 flex-col gap-1.5 p-3.5">
+          {s.code && <div className="text-[11px] tracking-wide text-oh-muted">Арт. {s.code}</div>}
+          <div className="line-clamp-2 min-h-[2.6em] text-[13.5px] font-medium leading-snug text-oh-ink" data-testid="product-title">
+            {product.title}
           </div>
-          <PreviewAddToCart product={product} region={region} />
+          <div className="mt-auto flex flex-col gap-0.5 pt-1">
+            {s.minPrice !== null ? (
+              <div className="text-[17px] font-semibold text-oh-ink" data-testid="price">
+                {s.minPrice === s.maxPrice ? formatRub(s.minPrice) : `от ${formatRub(s.minPrice)}`}
+              </div>
+            ) : (
+              <div className="text-sm text-oh-muted">цена по запросу</div>
+            )}
+            {s.minKrupny !== null && s.minKrupny < (s.minPrice ?? Infinity) && (
+              <div className="text-[12px] text-oh-azure">
+                крупный опт от {formatRub(s.minKrupny)}
+              </div>
+            )}
+          </div>
+          <div className="flex items-center justify-between gap-2 pt-1 text-[11.5px]">
+            <span className={clx("flex items-center gap-1.5", s.stock > 0 ? "text-oh-graphite" : "text-oh-muted")}>
+              <span className={clx("inline-block h-1.5 w-1.5 rounded-full", s.stock > 0 ? "bg-oh-mint-deep" : "bg-oh-line-2")} />
+              {stockLabel}
+            </span>
+            {s.packQty && s.packQty > 1 && <span className="text-oh-muted">упак. {s.packQty} шт</span>}
+          </div>
         </div>
       </div>
     </LocalizedClientLink>

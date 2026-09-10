@@ -132,7 +132,7 @@ const CartDrawer = ({
                     amount: subtotal,
                     currency_code: cart.currency_code,
                   })
-                : "Cart"}
+                : "Корзина"}
             </span>
             <div className="bg-blue-500 text-white text-xs px-1.5 py-px rounded-full">
               {totalItems}
@@ -147,7 +147,7 @@ const CartDrawer = ({
             <Drawer.Title>
               {totalItems > 0
                 ? `You have ${totalItems} items in your cart`
-                : "Your cart is empty"}
+                : "В корзине пока пусто"}
             </Drawer.Title>
           </Drawer.Header>
           {cart?.approvals && cart.approvals.length > 0 && (
@@ -177,7 +177,7 @@ const CartDrawer = ({
                     />
                   )}
                   <div className="flex justify-between">
-                    <Text>Subtotal</Text>
+                    <Text>Сумма</Text>
                     <Text>
                       {convertToLocale({
                         amount: subtotal,
@@ -204,9 +204,9 @@ const CartDrawer = ({
                         <LockClosedSolidMini />
                         {customer
                           ? spendLimitExceeded
-                            ? "Spending Limit Exceeded"
-                            : "Secure Checkout"
-                          : "Log in to checkout"}
+                            ? "Превышен лимит"
+                            : "Оформить заказ"
+                          : "Войдите, чтобы оформить"}
                       </Button>
                     </LocalizedClientLink>
                     {spendLimitExceeded && (

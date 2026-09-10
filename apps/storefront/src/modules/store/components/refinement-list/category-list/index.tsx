@@ -1,151 +1,94 @@
+"use client"
+
 import LocalizedClientLink from "@/modules/common/components/localized-client-link"
-import Radio from "@/modules/common/components/radio"
-import SquareMinus from "@/modules/common/icons/square-minus"
-import SquarePlus from "@/modules/common/icons/square-plus"
+import { visibleShowcases } from "@/lib/util/ohana"
 import { HttpTypes } from "@medusajs/types"
-import { Container, Text } from "@medusajs/ui"
-import { usePathname, useSearchParams } from "next/navigation"
-import { useCallback, useEffect, useState } from "react"
+import { clx } from "@medusajs/ui"
+import { useState } from "react"
 
-const CategoryList = ({
-  categories,
-  currentCategory,
-}: {
-  categories: HttpTypes.StoreProductCategory[]
-  currentCategory?: HttpTypes.StoreProductCategory
-}) => {
-  const getCategoriesToExpand = useCallback(
-    (category: HttpTypes.StoreProductCategory) => {
-      const categoriesToExpand = [category.id]
-      let current = category
-      while (current.parent_category_id) {
-        categoriesToExpand.push(current.parent_category_id)
-        current = categories.find(
-          (cat) => cat.id === current.parent_category_id
-        ) as HttpTypes.StoreProductCategory
-      }
-      return categoriesToExpand
-    },
-    [categories]
-  )
+type Cat = HttpTypes.StoreProductCategory
 
-  const [expandedCategories, setExpandedCategories] = useState<string[]>(() =>
-    currentCategory ? getCategoriesToExpand(currentCategory) : []
-  )
+/** Боковое дерево каталога: разделы → подразделы; сезонные подборки отдельным блоком. */
+const CategoryList = ({ categories, currentCategory }: { categories: Cat[]; currentCategory?: Cat }) => {
+  const isShowcase = (c: Cat) => (c.metadata as any)?.kind === "showcase"
+  const roots = categories.filter((c) => !c.parent_category_id && !isShowcase(c))
+  const showcases = visibleShowcases(categories)
+  const children = (id: string) => categories.filter((c) => c.parent_category_id === id)
 
-  const pathname = usePathname()
-
-  const toggleCategory = (categoryId: string) => {
-    setExpandedCategories((prev) =>
-      prev.includes(categoryId)
-        ? prev.filter((id) => id !== categoryId)
-        : [...prev, categoryId]
-    )
-  }
-
-  const searchParams = useSearchParams()
-
-  const isCurrentCategory = (handle: string) =>
-    pathname.split("/").slice(2).join("/") === `categories/${handle}`
-
-  useEffect(() => {
-    if (currentCategory) {
-      const categoriesToExpand = getCategoriesToExpand(currentCategory)
-      setExpandedCategories((prev) => {
-        const newCategories = categoriesToExpand.filter(
-          (cat) => !prev.includes(cat)
-        )
-        return newCategories.length ? [...prev, ...newCategories] : prev
-      })
-    }
-  }, [currentCategory, getCategoriesToExpand])
-
-  const getCategoryMarginLeft = useCallback(
-    (category: HttpTypes.StoreProductCategory) => {
-      let level = 0
-      let currentCategory = category
-      while (currentCategory.parent_category_id) {
-        level++
-        currentCategory = categories.find(
-          (cat) => cat.id === currentCategory.parent_category_id
-        ) as HttpTypes.StoreProductCategory
-      }
-      return level * 4
-    },
-    [categories]
-  )
-
-  const renderCategory = (category: HttpTypes.StoreProductCategory) => {
-    const hasChildren = category.category_children.length > 0
-    const isExpanded = expandedCategories.includes(category.id)
-    const paddingLeft = getCategoryMarginLeft(category)
-
-    return (
-      <li key={category.id}>
-        <div className={`flex items-center gap-2 mb-2 pl-${paddingLeft}`}>
-          {hasChildren ? (
-            <div className="flex items-center gap-2 hover:text-neutral-700">
-              <button onClick={() => toggleCategory(category.id)}>
-                {isExpanded ? (
-                  <SquareMinus className="h-3 mx-1" />
-                ) : (
-                  <SquarePlus className="h-3 mx-1" />
-                )}
-              </button>
-              <LocalizedClientLink
-                href={`/categories/${category.handle}${
-                  searchParams.size ? `?${searchParams.toString()}` : ""
-                }`}
-                className="flex gap-2 items-center hover:text-neutral-700"
-              >
-                {category.name} ({category.products?.length})
-              </LocalizedClientLink>
-            </div>
-          ) : (
-            <LocalizedClientLink
-              href={`/categories/${category.handle}${
-                searchParams.size ? `?${searchParams.toString()}` : ""
-              }`}
-              className="flex gap-2 items-center hover:text-neutral-700 text-start hover:cursor-pointer"
-            >
-              <Radio checked={isCurrentCategory(category.handle)} />
-              {category.name} ({category.products?.length})
-            </LocalizedClientLink>
-          )}
-        </div>
-        {hasChildren && isExpanded && (
-          <ul>
-            {category.category_children.map((childId) => {
-              const childCategory = categories.find(
-                (cat) => cat.id === childId.id
-              )
-              return childCategory ? renderCategory(childCategory) : null
-            })}
-          </ul>
-        )}
-      </li>
-    )
-  }
+  const activeRoot = currentCategory
+    ? currentCategory.parent_category_id || currentCategory.id
+    : null
+  const [expanded, setExpanded] = useState<string[]>(activeRoot ? [activeRoot] : [])
+  const toggle = (id: string) =>
+    setExpanded((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
 
   return (
-    <Container className="flex flex-col p-0 divide-y divide-neutral-200">
-      <div className="flex justify-between items-center p-3">
-        <Text className="text-sm font-medium">Categories</Text>
-        {pathname.includes("/categories") && (
-          <LocalizedClientLink
-            href="/store"
-            className="text-xs text-neutral-500 hover:text-neutral-700"
-          >
-            Clear
+    <div className="oh-card">
+      <div className="flex items-center justify-between border-b border-oh-line px-4 py-3">
+        <span className="text-sm font-semibold text-oh-ink">Каталог</span>
+        {currentCategory && (
+          <LocalizedClientLink href="/store" className="text-xs text-oh-muted hover:text-oh-azure">
+            все товары
           </LocalizedClientLink>
         )}
       </div>
-      <ul className="flex flex-col gap-3 text-sm p-3 text-neutral-500">
-        {categories
-          .filter((cat) => cat.parent_category_id === null)
-          .map(renderCategory)}
+      <ul className="py-2 text-sm">
+        {roots.map((root) => {
+          const kids = children(root.id)
+          const isOpen = expanded.includes(root.id)
+          const isActive = currentCategory?.id === root.id
+          return (
+            <li key={root.id}>
+              <div className="flex items-center">
+                <LocalizedClientLink
+                  href={`/categories/${root.handle}`}
+                  className={clx("flex-1 px-4 py-2 font-medium hover:text-oh-azure", isActive ? "text-oh-azure" : "text-oh-ink")}
+                >
+                  {root.name}
+                </LocalizedClientLink>
+                {kids.length > 0 && (
+                  <button type="button" onClick={() => toggle(root.id)} aria-label={isOpen ? "Свернуть" : "Развернуть"} className="px-3 py-2 text-oh-muted hover:text-oh-azure">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" className={clx("transition-transform", isOpen && "rotate-180")} aria-hidden>
+                      <path d="M6 9l6 6 6-6" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+              {kids.length > 0 && isOpen && (
+                <ul className="mb-1">
+                  {kids.map((k) => (
+                    <li key={k.id}>
+                      <LocalizedClientLink
+                        href={`/categories/${k.handle}`}
+                        className={clx("block py-1.5 pl-7 pr-4 hover:text-oh-azure", currentCategory?.id === k.id ? "font-medium text-oh-azure" : "text-oh-graphite")}
+                      >
+                        {k.name}
+                      </LocalizedClientLink>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </li>
+          )
+        })}
       </ul>
-    </Container>
+      {showcases.length > 0 && (
+        <div className="border-t border-oh-line px-4 py-3">
+          <div className="mb-2 text-[11px] uppercase tracking-wider text-oh-muted">Подборки</div>
+          <div className="flex flex-wrap gap-1.5">
+            {showcases.map((c) => (
+              <LocalizedClientLink
+                key={c.id}
+                href={`/categories/${c.handle}`}
+                className={clx("oh-chip !px-2.5 !py-1 !text-[12px]", currentCategory?.id === c.id && "!border-oh-azure !text-oh-azure")}
+              >
+                {c.name}
+              </LocalizedClientLink>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
   )
 }
 

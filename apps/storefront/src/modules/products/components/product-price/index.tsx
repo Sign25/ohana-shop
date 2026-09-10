@@ -1,44 +1,28 @@
-import { clx, Text } from "@medusajs/ui"
-import { getProductPrice } from "@/lib/util/get-product-price"
+import { formatRub, KRUPNY_THRESHOLD, OPT_THRESHOLD, productSummary } from "@/lib/util/ohana"
 import { HttpTypes } from "@medusajs/types"
 
-export default function ProductPrice({
-  product,
-}: {
-  product: HttpTypes.StoreProduct
-}) {
-  const { cheapestPrice } = getProductPrice({
-    product,
-  })
-
-  if (!cheapestPrice) {
-    return <div className="block w-32 h-9 bg-gray-100 animate-pulse" />
+/** Блок цен как на текущем сайте: опт и крупный опт (порог 100 000 ₽ применяется автоматически) */
+export default function ProductPrice({ product }: { product: HttpTypes.StoreProduct }) {
+  const s = productSummary(product)
+  if (s.minPrice === null) {
+    return <div className="text-sm text-oh-muted">Цена по запросу</div>
   }
-
+  const same = s.minPrice === s.maxPrice
   return (
-    <div className="flex flex-col text-neutral-950">
-      <span
-        className={clx({
-          "text-ui-fg-interactive": cheapestPrice.price_type === "sale",
-        })}
-      >
-        <Text
-          className="font-medium text-xl"
-          data-testid="product-price"
-          data-value={cheapestPrice.calculated_price_number}
-        >
-          From {cheapestPrice.calculated_price}
-        </Text>
-        <Text className="text-neutral-600 text-[0.6rem]">Excl. VAT</Text>
-      </span>
-      {cheapestPrice.price_type === "sale" && (
-        <p
-          className="line-through text-neutral-500"
-          data-testid="original-product-price"
-          data-value={cheapestPrice.original_price_number}
-        >
-          {cheapestPrice.original_price}
-        </p>
+    <div className="grid grid-cols-2 gap-2">
+      <div className="rounded-card border border-oh-line bg-white p-3">
+        <div className="text-[11px] uppercase tracking-wider text-oh-muted">Опт</div>
+        <div className="text-[22px] font-semibold text-oh-ink" data-testid="product-price" data-value={s.minPrice}>
+          {same ? formatRub(s.minPrice) : `от ${formatRub(s.minPrice)}`}
+        </div>
+        <div className="text-[11px] text-oh-muted">за шт · заказ от {formatRub(OPT_THRESHOLD)}</div>
+      </div>
+      {s.minKrupny !== null && (
+        <div className="rounded-card border border-oh-azure/30 bg-oh-azure/5 p-3">
+          <div className="text-[11px] uppercase tracking-wider text-oh-azure">Крупный опт</div>
+          <div className="text-[22px] font-semibold text-oh-azure">{same ? formatRub(s.minKrupny) : `от ${formatRub(s.minKrupny)}`}</div>
+          <div className="text-[11px] text-oh-azure/80">при корзине от {formatRub(KRUPNY_THRESHOLD)}</div>
+        </div>
       )}
     </div>
   )

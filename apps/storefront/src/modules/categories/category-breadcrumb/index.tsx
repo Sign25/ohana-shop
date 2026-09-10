@@ -1,25 +1,5 @@
 import LocalizedClientLink from "@/modules/common/components/localized-client-link"
 import { HttpTypes } from "@medusajs/types"
-import type { JSX } from "react"
-
-const CategoryBreadcrumbItem = ({
-  title,
-  handle,
-}: {
-  title: string
-  handle?: string
-}) => {
-  return (
-    <li className="text-neutral-500" key={handle}>
-      <LocalizedClientLink
-        className="hover:text-neutral-900"
-        href={handle ? `/categories/${handle}` : "/store"}
-      >
-        {title}
-      </LocalizedClientLink>
-    </li>
-  )
-}
 
 const CategoryBreadcrumb = ({
   categories,
@@ -28,63 +8,40 @@ const CategoryBreadcrumb = ({
   categories: HttpTypes.StoreProductCategory[]
   category: HttpTypes.StoreProductCategory
 }) => {
-  const generateBreadcrumbs = (
-    category: HttpTypes.StoreProductCategory
-  ): JSX.Element[] => {
-    let currentCategory: HttpTypes.StoreProductCategory | null = category
-    const breadcrumbs: JSX.Element[] = []
-
-    breadcrumbs.unshift(
-      <CategoryBreadcrumbItem
-        title={currentCategory.name}
-        handle={currentCategory.handle}
-        key={currentCategory.id}
-      />
-    )
-
-    currentCategory =
-      categories.find((c) => c.id === currentCategory?.parent_category_id) ||
-      null
-
-    while (currentCategory) {
-      breadcrumbs.unshift(
-        <li
-          className="text-neutral-500"
-          key={`separator-parent-${currentCategory.id}`}
-        >
-          {">"}
-        </li>
-      )
-
-      breadcrumbs.unshift(
-        <CategoryBreadcrumbItem
-          title={currentCategory.name}
-          handle={currentCategory.handle}
-          key={currentCategory.id}
-        />
-      )
-
-      currentCategory =
-        categories.find((c) => c.id === currentCategory?.parent_category_id) ||
-        null
-    }
-
-    breadcrumbs.unshift(
-      <li className="text-neutral-500" key={`separator-parent-base`}>
-        {">"}
-      </li>
-    )
-
-    breadcrumbs.unshift(
-      <CategoryBreadcrumbItem title="Products" key={`base`} />
-    )
-
-    return breadcrumbs
+  const chain: HttpTypes.StoreProductCategory[] = []
+  let cur: HttpTypes.StoreProductCategory | undefined = category
+  while (cur) {
+    chain.unshift(cur)
+    cur = categories.find((c) => c.id === cur?.parent_category_id)
   }
 
-  const breadcrumbs = generateBreadcrumbs(category)
-
-  return <ul className="flex items-center gap-x-3 text-sm">{breadcrumbs}</ul>
+  return (
+    <ul className="flex flex-wrap items-center gap-x-2 text-[13px] text-oh-muted">
+      <li>
+        <LocalizedClientLink className="hover:text-oh-azure" href="/">
+          Главная
+        </LocalizedClientLink>
+      </li>
+      <li>›</li>
+      <li>
+        <LocalizedClientLink className="hover:text-oh-azure" href="/store">
+          Каталог
+        </LocalizedClientLink>
+      </li>
+      {chain.map((c, i) => (
+        <li key={c.id} className="flex items-center gap-x-2">
+          <span>›</span>
+          {i === chain.length - 1 ? (
+            <span className="text-oh-graphite">{c.name}</span>
+          ) : (
+            <LocalizedClientLink className="hover:text-oh-azure" href={`/categories/${c.handle}`}>
+              {c.name}
+            </LocalizedClientLink>
+          )}
+        </li>
+      ))}
+    </ul>
+  )
 }
 
 export default CategoryBreadcrumb

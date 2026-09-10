@@ -2,7 +2,7 @@
 
 import { ChevronUpDown } from "@medusajs/icons"
 
-export type SortOptions = "price_asc" | "price_desc" | "created_at"
+export type SortOptions = "created_at" | "title"
 
 type SortProductsProps = {
   sortBy: SortOptions
@@ -10,49 +10,31 @@ type SortProductsProps = {
   "data-testid"?: string
 }
 
-const sortOptions = [
-  {
-    value: "created_at",
-    label: "Latest Arrivals",
-  },
-  {
-    value: "price_asc",
-    label: "Price: Low -> High",
-  },
-  {
-    value: "price_desc",
-    label: "Price: High -> Low",
-  },
+const sortOptions: { value: SortOptions; label: string }[] = [
+  { value: "created_at", label: "Сначала новые" },
+  { value: "title", label: "По названию" },
 ]
 
-const SortProducts = ({
-  "data-testid": dataTestId,
-  sortBy,
-  setQueryParams,
-}: SortProductsProps) => {
-  const handleChange = (value: SortOptions) => {
-    setQueryParams("sortBy", value)
-  }
-
+const SortProducts = ({ "data-testid": dataTestId, sortBy, setQueryParams }: SortProductsProps) => {
   return (
-    <div className="flex items-center gap-2 text-sm p-2 justify-between">
-      <span className="text-neutral-500">Sort by:</span>
+    <div className="flex items-center justify-between gap-2 p-3 text-sm">
+      <span className="text-oh-muted">Сортировка</span>
       <div className="relative">
         <select
-          className="w-full pr-8 overflow-hidden focus:outline-none appearance-none"
-          title="Sort by"
+          className="w-full appearance-none overflow-hidden bg-transparent pr-7 font-medium text-oh-ink focus:outline-none"
+          title="Сортировка"
           value={sortBy}
-          onChange={(e) => handleChange(e.target.value as SortOptions)}
+          onChange={(e) => setQueryParams("sortBy", e.target.value as SortOptions)}
           data-testid={dataTestId}
         >
-          {sortOptions.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
+          {sortOptions.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
             </option>
           ))}
         </select>
-        <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-          <ChevronUpDown className="w-4 h-4 text-neutral-500" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-1">
+          <ChevronUpDown className="h-4 w-4 text-oh-muted" />
         </div>
       </div>
     </div>

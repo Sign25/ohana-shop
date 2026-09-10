@@ -1,30 +1,20 @@
+import { productSummary } from "@/lib/util/ohana"
 import { HttpTypes } from "@medusajs/types"
-import { Heading, Text } from "@medusajs/ui"
-import LocalizedClientLink from "@/modules/common/components/localized-client-link"
 
-type ProductInfoProps = {
-  product: HttpTypes.StoreProduct
-}
-
-const ProductInfo = ({ product }: ProductInfoProps) => {
+const ProductInfo = ({ product }: { product: HttpTypes.StoreProduct }) => {
+  const s = productSummary(product)
   return (
-    <div id="product-info">
-      <div className="flex flex-col gap-y-4 w-full">
-        <Heading
-          level="h1"
-          className="text-[2.5rem] leading-10 text-ui-fg-base"
-          data-testid="product-title"
-        >
-          {product.title}
-        </Heading>
-
-        <Text
-          className="text-2xl text-ui-fg-subtle whitespace-pre-line"
-          data-testid="product-description"
-        >
-          {product.subtitle}
-        </Text>
-      </div>
+    <div id="product-info" className="flex w-full flex-col gap-2">
+      {s.code && <div className="text-[12px] tracking-wide text-oh-muted">Артикул {s.code}</div>}
+      <h1 className="text-[26px] font-semibold leading-tight text-oh-ink small:text-[30px]" data-testid="product-title">
+        {product.title}
+      </h1>
+      {(s.sizeRange || s.composition) && (
+        <div className="flex flex-wrap gap-x-4 gap-y-1 text-[13px] text-oh-graphite">
+          {s.sizeRange && <span>Размеры {s.sizeRange}</span>}
+          {s.composition && <span>{s.composition}</span>}
+        </div>
+      )}
     </div>
   )
 }

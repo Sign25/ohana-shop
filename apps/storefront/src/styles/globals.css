@@ -2,26 +2,105 @@
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 
+/* Акцидентный шрифт брендбука — RF Rufo (файлы прислал владелец, лежат в public/fonts) */
+@font-face {
+  font-family: "RF Rufo";
+  src: url("/fonts/rf_rufo_regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "RF Rufo";
+  src: url("/fonts/rf_rufo_bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --oh-primary: #f4503a;
+  --oh-primary-hover: #dc3c28;
+  --oh-graphite: #4a4a4a;
+  --oh-azure: #246075;
+  --oh-beige: #f5e9d3;
+  --oh-paper: #fbf8f3;
+  --oh-line: #ede5d8;
+  accent-color: var(--oh-azure);
+}
+
+@layer base {
+  html {
+    color: var(--oh-graphite);
+  }
+  ::selection {
+    background: var(--oh-beige);
+  }
+}
+
+@layer components {
+  /* Заголовки разделов — RF Rufo, без жирности (решение владельца 28.06.2026) */
+  .oh-h {
+    @apply font-display font-normal tracking-wide text-oh-ink;
+  }
+  /* Главная кнопка — единственное место терракота/коралла */
+  .oh-btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-pill bg-oh-primary px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-oh-primary-hover disabled:opacity-50 disabled:pointer-events-none;
+  }
+  .oh-btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-pill border border-oh-line-2 bg-white px-5 py-2.5 text-sm font-medium text-oh-graphite transition-colors hover:border-oh-azure hover:text-oh-azure;
+  }
+  .oh-chip {
+    @apply inline-flex items-center gap-1.5 rounded-pill border border-oh-line bg-white px-3.5 py-1.5 text-[13px] font-medium text-oh-graphite transition-colors hover:border-oh-azure hover:text-oh-azure;
+  }
+  .oh-card {
+    @apply rounded-card border border-oh-line bg-white;
+  }
+  /* Описание товара из 1С приходит HTML-ом */
+  .oh-prose p {
+    @apply mb-3 leading-relaxed;
+  }
+  .oh-prose ul {
+    @apply list-disc pl-5 mb-3;
+  }
+  .oh-prose li {
+    @apply mb-1;
+  }
+
+  /* --- утилиты стартера, на них завязаны существующие компоненты --- */
+  .content-container { @apply max-w-[1440px] w-full mx-auto px-6; }
+  .contrast-btn { @apply px-4 py-2 border border-black rounded-full hover:bg-black hover:text-white transition-colors duration-200 ease-in; }
+  .text-xsmall-regular { @apply text-[10px] leading-4 font-normal; }
+  .text-small-regular { @apply text-xs leading-5 font-normal; }
+  .text-small-semi { @apply text-xs leading-5 font-semibold; }
+  .text-base-regular { @apply text-sm leading-6 font-normal; }
+  .text-base-semi { @apply text-sm leading-6 font-semibold; }
+  .text-large-regular { @apply text-base leading-6 font-normal; }
+  .text-large-semi { @apply text-base leading-6 font-semibold; }
+  .text-xl-regular { @apply text-2xl leading-[36px] font-normal; }
+  .text-xl-semi { @apply text-2xl leading-[36px] font-semibold; }
+  .text-2xl-regular { @apply text-[30px] leading-[48px] font-normal; }
+  .text-2xl-semi { @apply text-[30px] leading-[48px] font-semibold; }
+  .text-3xl-regular { @apply text-[32px] leading-[44px] font-normal; }
+  .text-3xl-semi { @apply text-[32px] leading-[44px] font-semibold; }
+}
+
 @layer utilities {
-  /* Chrome, Safari and Opera */
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
-
   .no-scrollbar::-webkit-scrollbar-track {
     background-color: transparent;
   }
-
   .no-scrollbar {
-    -ms-overflow-style: none; /* IE and Edge */
-    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 
   input:focus ~ label,
   input:not(:placeholder-shown) ~ label {
     @apply -translate-y-2 text-xsmall-regular;
   }
-
   input:focus ~ label {
     @apply left-0;
   }
@@ -46,67 +125,5 @@
   input[type="search"]::-webkit-search-results-button,
   input[type="search"]::-webkit-search-results-decoration {
     -webkit-appearance: none;
-  }
-}
-
-@layer components {
-  .content-container {
-    @apply max-w-[1440px] w-full mx-auto px-6;
-  }
-
-  .contrast-btn {
-    @apply px-4 py-2 border border-black rounded-full hover:bg-black hover:text-white transition-colors duration-200 ease-in;
-  }
-
-  .text-xsmall-regular {
-    @apply text-[10px] leading-4 font-normal;
-  }
-
-  .text-small-regular {
-    @apply text-xs leading-5 font-normal;
-  }
-
-  .text-small-semi {
-    @apply text-xs leading-5 font-semibold;
-  }
-
-  .text-base-regular {
-    @apply text-sm leading-6 font-normal;
-  }
-
-  .text-base-semi {
-    @apply text-sm leading-6 font-semibold;
-  }
-
-  .text-large-regular {
-    @apply text-base leading-6 font-normal;
-  }
-
-  .text-large-semi {
-    @apply text-base leading-6 font-semibold;
-  }
-
-  .text-xl-regular {
-    @apply text-2xl leading-[36px] font-normal;
-  }
-
-  .text-xl-semi {
-    @apply text-2xl leading-[36px] font-semibold;
-  }
-
-  .text-2xl-regular {
-    @apply text-[30px] leading-[48px] font-normal;
-  }
-
-  .text-2xl-semi {
-    @apply text-[30px] leading-[48px] font-semibold;
-  }
-
-  .text-3xl-regular {
-    @apply text-[32px] leading-[44px] font-normal;
-  }
-
-  .text-3xl-semi {
-    @apply text-[32px] leading-[44px] font-semibold;
   }
 }

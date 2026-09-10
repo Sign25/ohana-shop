@@ -1,157 +1,83 @@
-import { listCategories } from "@/lib/data/categories"
-import { listCollections } from "@/lib/data/collections"
-import { Text, clx } from "@medusajs/ui"
-
+import { listCategoryTree } from "@/lib/data/categories"
 import LocalizedClientLink from "@/modules/common/components/localized-client-link"
+import Image from "next/image"
+
+/** Служебные страницы пока живут на старом сайте — ссылки временные, до переноса разделов. */
+const BUYERS = [
+  { label: "Как начать работать", href: "https://ohanaopt.ru/biznes-s-ohanoy/" },
+  { label: "Доставка и оплата", href: "https://ohanaopt.ru/faq/" },
+  { label: "Возврат и обмен", href: "https://ohanaopt.ru/return/" },
+  { label: "Вопросы и ответы", href: "https://ohanaopt.ru/faq/" },
+  { label: "Подбор размера", href: "https://ohanaopt.ru/podbor-razmera/" },
+  { label: "Совместные покупки", href: "https://ohanaopt.ru/sovmestnye-pokupki/" },
+]
+const COMPANY = [
+  { label: "О компании", href: "https://ohanaopt.ru/about/" },
+  { label: "Награды", href: "https://ohanaopt.ru/about/nagrady/" },
+  { label: "Контакты", href: "https://ohanaopt.ru/contacts/" },
+  { label: "Розничный магазин", href: "https://ohana.market/" },
+]
 
 export default async function Footer() {
-  const { collections } = await listCollections({
-    offset: "0",
-    limit: "6",
-  })
-  const product_categories = await listCategories({
-    offset: 0,
-    limit: 6,
-  })
+  const categories = await listCategoryTree().catch(() => [])
+  const roots = categories.filter((c) => !c.parent_category_id && (c.metadata as any)?.kind !== "showcase")
 
   return (
-    <footer className="border-t border-ui-border-base w-full">
-      <div className="content-container flex flex-col w-full">
-        <div className="flex flex-col gap-y-6 xsmall:flex-row items-start justify-between py-40">
-          <div>
-            <LocalizedClientLink
-              href="/"
-              className="txt-compact-xlarge-plus text-ui-fg-subtle hover:text-ui-fg-base uppercase"
-            >
-              Ohana Market
-            </LocalizedClientLink>
-          </div>
-          <div className="text-small-regular gap-10 md:gap-x-16 grid grid-cols-2 sm:grid-cols-3">
-            {product_categories && product_categories?.length > 0 && (
-              <div className="flex flex-col gap-y-2">
-                <span className="txt-small-plus txt-ui-fg-base">
-                  Каталог
-                </span>
-                <ul
-                  className="grid grid-cols-1 gap-2"
-                  data-testid="footer-categories"
-                >
-                  {product_categories?.slice(0, 6).map((c) => {
-                    if (c.parent_category) {
-                      return
-                    }
-
-                    const children =
-                      c.category_children?.map((child) => ({
-                        name: child.name,
-                        handle: child.handle,
-                        id: child.id,
-                      })) || null
-
-                    return (
-                      <li
-                        className="flex flex-col gap-2 text-ui-fg-subtle txt-small"
-                        key={c.id}
-                      >
-                        <LocalizedClientLink
-                          className={clx(
-                            "hover:text-ui-fg-base",
-                            children && "txt-small-plus"
-                          )}
-                          href={`/categories/${c.handle}`}
-                          data-testid="category-link"
-                        >
-                          {c.name}
-                        </LocalizedClientLink>
-                        {children && (
-                          <ul className="grid grid-cols-1 ml-3 gap-2">
-                            {children &&
-                              children.map((child) => (
-                                <li key={child.id}>
-                                  <LocalizedClientLink
-                                    className="hover:text-ui-fg-base"
-                                    href={`/categories/${child.handle}`}
-                                    data-testid="category-link"
-                                  >
-                                    {child.name}
-                                  </LocalizedClientLink>
-                                </li>
-                              ))}
-                          </ul>
-                        )}
-                      </li>
-                    )
-                  })}
-                </ul>
-              </div>
-            )}
-            {collections && collections.length > 0 && (
-              <div className="flex flex-col gap-y-2">
-                <span className="txt-small-plus txt-ui-fg-base">
-                  Collections
-                </span>
-                <ul
-                  className={clx(
-                    "grid grid-cols-1 gap-2 text-ui-fg-subtle txt-small",
-                    {
-                      "grid-cols-2": (collections?.length || 0) > 3,
-                    }
-                  )}
-                >
-                  {collections?.slice(0, 6).map((c) => (
-                    <li key={c.id}>
-                      <LocalizedClientLink
-                        className="hover:text-ui-fg-base"
-                        href={`/collections/${c.handle}`}
-                      >
-                        {c.title}
-                      </LocalizedClientLink>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            <div className="flex flex-col gap-y-2">
-              <span className="txt-small-plus txt-ui-fg-base">Medusa</span>
-              <ul className="grid grid-cols-1 gap-y-2 text-ui-fg-subtle txt-small">
-                <li>
-                  <a
-                    href="https://github.com/medusajs"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="hover:text-ui-fg-base"
-                  >
-                    GitHub
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="https://docs.medusajs.com"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="hover:text-ui-fg-base"
-                  >
-                    Documentation
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="https://github.com/medusajs/b2b-starter-medusa"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="hover:text-ui-fg-base"
-                  >
-                    Source code
-                  </a>
-                </li>
-              </ul>
-            </div>
+    <footer className="mt-10 border-t border-oh-line bg-oh-paper">
+      <div className="content-container grid grid-cols-1 gap-10 py-12 small:grid-cols-[1.4fr_1fr_1fr_1fr]">
+        <div className="flex flex-col gap-4">
+          <LocalizedClientLink href="/" className="w-fit">
+            <Image src="/logo.png" alt="Ohana market" width={432} height={192} className="h-11 w-auto" />
+          </LocalizedClientLink>
+          <p className="max-w-[34ch] text-[13px] leading-relaxed text-oh-graphite">
+            Одежда и домашний текстиль оптом напрямую от производителя из Омска. Собственное производство, отгрузка 24–48 часов, доставка до терминала ТК бесплатно.
+          </p>
+          <div className="flex flex-col gap-1 text-[14px]">
+            <a href="tel:+79914301730" className="font-semibold text-oh-ink hover:text-oh-azure">8 (991) 430-17-30</a>
+            <a href="mailto:info@ohanamarket.ru" className="text-oh-graphite hover:text-oh-azure">info@ohanamarket.ru</a>
+            <span className="text-oh-muted">пн–пт 10:00–18:00, Омск</span>
           </div>
         </div>
-        <div className="flex w-full mb-16 justify-between text-ui-fg-muted">
-          <Text className="txt-compact-small">
-            © {new Date().getFullYear()} Ohana Market. Оптовые поставки одежды и домашнего текстиля.
-          </Text>
+
+        <div>
+          <div className="mb-3 text-[12px] font-semibold uppercase tracking-wider text-oh-ink">Каталог</div>
+          <ul className="flex flex-col gap-1.5 text-[13px]">
+            {roots.map((c) => (
+              <li key={c.id}>
+                <LocalizedClientLink href={`/categories/${c.handle}`} className="text-oh-graphite hover:text-oh-azure">
+                  {c.name}
+                </LocalizedClientLink>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div>
+          <div className="mb-3 text-[12px] font-semibold uppercase tracking-wider text-oh-ink">Покупателям</div>
+          <ul className="flex flex-col gap-1.5 text-[13px]">
+            {BUYERS.map((l) => (
+              <li key={l.label}>
+                <a href={l.href} className="text-oh-graphite hover:text-oh-azure">{l.label}</a>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div>
+          <div className="mb-3 text-[12px] font-semibold uppercase tracking-wider text-oh-ink">Компания</div>
+          <ul className="flex flex-col gap-1.5 text-[13px]">
+            {COMPANY.map((l) => (
+              <li key={l.label}>
+                <a href={l.href} className="text-oh-graphite hover:text-oh-azure">{l.label}</a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+      <div className="border-t border-oh-line">
+        <div className="content-container flex flex-col gap-2 py-4 text-[12px] text-oh-muted small:flex-row small:items-center small:justify-between">
+          <span>© {new Date().getFullYear()} Ohana Market. Оптовые поставки одежды и домашнего текстиля.</span>
+          <span>Марка №1 в России · Бренд года 2025</span>
         </div>
       </div>
     </footer>

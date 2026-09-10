@@ -16,42 +16,28 @@ type ProductTemplateProps = {
   countryCode: string
 }
 
-const ProductTemplate: React.FC<ProductTemplateProps> = ({
-  product,
-  region,
-  countryCode,
-}) => {
-  if (!product || !product.id) {
-    return notFound()
-  }
+const ProductTemplate: React.FC<ProductTemplateProps> = ({ product, region, countryCode }) => {
+  if (!product || !product.id) return notFound()
 
   return (
-    <div className="flex flex-col gap-y-2 my-2">
-      <div
-        className="content-container grid grid-cols-1 md:grid-cols-2 gap-2 w-full h-fit"
-        data-testid="product-container"
-      >
-        <ImageGallery product={product} />
-        <div className="flex flex-col bg-neutral-100 w-full gap-6 items-start justify-center small:p-20 p-6 h-full">
-          <ProductInfo product={product} />
-          <Suspense
-            fallback={<ProductActions product={product} region={region} />}
-          >
-            <ProductActionsWrapper id={product.id} region={region} />
-          </Suspense>
-          <ProductFacts product={product} />
+    <div className="bg-oh-paper/60">
+      <div className="content-container flex flex-col gap-4 py-6">
+        <div className="grid w-full grid-cols-1 gap-6 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]" data-testid="product-container">
+          <ImageGallery product={product} />
+          <div className="flex w-full flex-col gap-5">
+            <ProductInfo product={product} />
+            <Suspense fallback={<ProductActions product={product} region={region} />}>
+              <ProductActionsWrapper id={product.id} region={region} />
+            </Suspense>
+            <ProductFacts product={product} />
+          </div>
         </div>
-      </div>
-      <div className="content-container">
         <ProductTabs product={product} />
-      </div>
-      <div
-        className="content-container"
-        data-testid="related-products-container"
-      >
-        <Suspense fallback={<SkeletonRelatedProducts />}>
-          <RelatedProducts product={product} countryCode={countryCode} />
-        </Suspense>
+        <div data-testid="related-products-container">
+          <Suspense fallback={<SkeletonRelatedProducts />}>
+            <RelatedProducts product={product} countryCode={countryCode} />
+          </Suspense>
+        </div>
       </div>
     </div>
   )

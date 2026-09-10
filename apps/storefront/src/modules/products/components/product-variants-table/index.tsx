@@ -76,7 +76,7 @@ const ProductVariantsTable = ({
       <div className="overflow-x-auto p-px">
         <Table className="w-full rounded-xl overflow-hidden shadow-borders-base border-none ">
           <Table.Header className="border-t-0">
-            <Table.Row className="bg-neutral-100 border-none hover:!bg-neutral-100">
+            <Table.Row className="bg-oh-paper border-none hover:!bg-oh-paper">
               <Table.HeaderCell className="px-4">Артикул</Table.HeaderCell>
               {product.options?.map((option) => {
                 if (option.title === "Default option") {
@@ -91,6 +91,7 @@ const ProductVariantsTable = ({
               <Table.HeaderCell className="px-4 border-x">
                 Цена
               </Table.HeaderCell>
+              <Table.HeaderCell className="px-3 border-r">Остаток</Table.HeaderCell>
               <Table.HeaderCell className="px-4">Кол-во</Table.HeaderCell>
             </Table.Row>
           </Table.Header>
@@ -124,13 +125,18 @@ const ProductVariantsTable = ({
                       </Table.Cell>
                     )
                   })}
-                  <Table.Cell className="px-4 border-x">
+                  <Table.Cell className="px-4 border-x whitespace-nowrap">
                     {variantPrice?.calculated_price}
+                  </Table.Cell>
+                  <Table.Cell className="px-3 border-r text-center text-oh-muted whitespace-nowrap">
+                    {typeof variant.inventory_quantity === "number" ? (variant.inventory_quantity > 0 ? variant.inventory_quantity : "—") : ""}
                   </Table.Cell>
                   <Table.Cell className="pl-1 !pr-1">
                     <BulkTableQuantity
                       variantId={variant.id}
                       onChange={handleQuantityChange}
+                      step={Number((variant.metadata as any)?.qty_step) || 1}
+                      max={typeof variant.inventory_quantity === "number" ? variant.inventory_quantity : undefined}
                     />
                   </Table.Cell>
                 </Table.Row>
@@ -142,7 +148,7 @@ const ProductVariantsTable = ({
       <Button
         onClick={handleAddToCart}
         variant="primary"
-        className="w-full h-10"
+        className="w-full h-11 !rounded-pill !bg-oh-primary hover:!bg-oh-primary-hover !border-none !shadow-none"
         isLoading={isAdding}
         disabled={totalQuantity === 0}
         data-testid="add-product-button"
@@ -152,8 +158,8 @@ const ProductVariantsTable = ({
           fill={totalQuantity === 0 ? "none" : "#fff"}
         />
         {totalQuantity === 0
-          ? "Choose product variant(s) above"
-          : "Add to cart"}
+          ? "Укажите количество по размерам"
+          : `В корзину · ${totalQuantity} шт`}
       </Button>
     </div>
   )

@@ -1,7 +1,4 @@
-import { listCategories } from "@/lib/data/categories"
-import { retrieveCustomer } from "@/lib/data/customer"
-import { listGlobalProductOptions } from "@/lib/data/product-options"
-import { parseOptionValueIds } from "@/lib/util/option-value-query"
+import { listCategoryTree } from "@/lib/data/categories"
 import SkeletonProductGrid from "@/modules/skeletons/templates/skeleton-product-grid"
 import RefinementList from "@/modules/store/components/refinement-list"
 import { SortOptions } from "@/modules/store/components/refinement-list/sort-products"
@@ -13,58 +10,33 @@ import { Suspense } from "react"
 export const dynamicParams = true
 
 export const metadata: Metadata = {
-  title: "Store",
-  description: "Explore all of our products.",
+  title: "Каталог",
+  description: "Все товары Ohana Market оптом: женская, мужская и детская одежда, домашний текстиль.",
 }
 
 type Params = {
-  searchParams: Promise<{
-    sortBy?: SortOptions
-    page?: string
-    optionValueIds?: string | string[]
-  }>
-  params: Promise<{
-    countryCode: string
-  }>
+  searchParams: Promise<{ sortBy?: SortOptions; page?: string; q?: string }>
+  params: Promise<{ countryCode: string }>
 }
 
 export default async function StorePage(props: Params) {
   const params = await props.params
   const searchParams = await props.searchParams
-  const { sortBy, page } = searchParams
-
+  const { sortBy, page, q } = searchParams
   const sort = sortBy || "created_at"
   const pageNumber = page ? parseInt(page) : 1
-  const optionValueIds = parseOptionValueIds(searchParams)
-
-  const [categories, customer, productOptions] = await Promise.all([
-    listCategories(),
-    retrieveCustomer(),
-    listGlobalProductOptions(),
-  ])
+  const categories = await listCategoryTree()
 
   return (
-    <div className="bg-neutral-100">
-      <div
-        className="flex flex-col py-6 content-container gap-4"
-        data-testid="category-container"
-      >
-        <StoreBreadcrumb />
-        <div className="flex flex-col small:flex-row small:items-start gap-3">
-          <RefinementList
-            sortBy={sort}
-            categories={categories}
-            productOptions={productOptions}
-          />
+    <div className="bg-oh-paper/60">
+      <div className="content-container flex flex-col gap-4 py-6" data-testid="category-container">
+        <StoreBreadcrumb current={q ? `Поиск: ${q}` : "Все товары"} />
+        <h1 className="oh-h text-[30px]">{q ? `Поиск «${q}»` : "Все товары"}</h1>
+        <div className="flex flex-col gap-3 small:flex-row small:items-start">
+          <RefinementList sortBy={sort} categories={categories} />
           <div className="w-full">
             <Suspense fallback={<SkeletonProductGrid />}>
-              <PaginatedProducts
-                sortBy={sort}
-                page={pageNumber}
-                countryCode={params.countryCode}
-                customer={customer}
-                optionValueIds={optionValueIds}
-              />
+              <PaginatedProducts sortBy={sort} page={pageNumber} countryCode={params.countryCode} q={q} />
             </Suspense>
           </div>
         </div>
@@ -72,4 +44,3 @@ export default async function StorePage(props: Params) {
     </div>
   )
 }
-;``
