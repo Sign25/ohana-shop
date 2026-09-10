@@ -84,8 +84,9 @@ const MobileMenu = ({ categories }: { categories: Cat[] }) => {
               <div className="border-t border-oh-line px-4 py-3 text-[13px]">
                 <LocalizedClientLink href="/account" className="block py-1.5 text-oh-ink">Личный кабинет</LocalizedClientLink>
                 <LocalizedClientLink href="/cart" className="block py-1.5 text-oh-ink">Корзина</LocalizedClientLink>
-                <a href="https://ohanaopt.ru/biznes-s-ohanoy/" className="block py-1.5 text-oh-graphite">Бизнес с Оханой</a>
-                <a href="https://ohanaopt.ru/podbor-razmera/" className="block py-1.5 text-oh-graphite">Подбор размера</a>
+                <LocalizedClientLink href="/biznes-s-ohanoy" className="block py-1.5 text-oh-graphite">Бизнес с Оханой</LocalizedClientLink>
+                <LocalizedClientLink href="/podbor-razmera" className="block py-1.5 text-oh-graphite">Подбор размера</LocalizedClientLink>
+                <LocalizedClientLink href="/sovmestnye-pokupki" className="block py-1.5 text-oh-graphite">Совместные покупки</LocalizedClientLink>
                 <a href="https://ohana.market/" className="block py-1.5 text-oh-muted">Розничный магазин ↗</a>
               </div>
             </div>

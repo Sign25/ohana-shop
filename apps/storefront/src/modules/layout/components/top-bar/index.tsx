@@ -3,12 +3,12 @@ import Image from "next/image"
 
 /**
  * Топ-панель как на текущем ohanaopt.ru (вариант A, 07.09.2026): пилюля наград слева,
- * сервисные чипы по центру, телефон справа. Сервисные страницы пока живут на старом сайте.
+ * сервисные чипы по центру (калькуляторы перенесены на этот сайт), телефон справа.
  */
 const SERVICES = [
-  { label: "Бизнес с Оханой", href: "https://ohanaopt.ru/biznes-s-ohanoy/" },
-  { label: "Совместные покупки", href: "https://ohanaopt.ru/sovmestnye-pokupki/" },
-  { label: "Подбор размера", href: "https://ohanaopt.ru/podbor-razmera/" },
+  { label: "Бизнес с Оханой", href: "/biznes-s-ohanoy" },
+  { label: "Совместные покупки", href: "/sovmestnye-pokupki" },
+  { label: "Подбор размера", href: "/podbor-razmera" },
 ]
 
 const TopBar = () => {
@@ -29,9 +29,9 @@ const TopBar = () => {
 
         <nav className="flex items-center gap-2">
           {SERVICES.map((s) => (
-            <a key={s.href} href={s.href} className="oh-chip !py-1 !text-[12px]">
+            <LocalizedClientLink key={s.href} href={s.href} className="oh-chip !py-1 !text-[12px]">
               {s.label}
-            </a>
+            </LocalizedClientLink>
           ))}
         </nav>
 

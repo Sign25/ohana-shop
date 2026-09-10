@@ -10,8 +10,8 @@ const BUYERS = [
   { label: "Оплата", href: "/p/payment" },
   { label: "Возврат и обмен", href: "/p/return" },
   { label: "Вопросы и ответы", href: "/p/faq" },
-  { label: "Подбор размера", href: "https://ohanaopt.ru/podbor-razmera/" },
-  { label: "Бизнес с Оханой", href: "https://ohanaopt.ru/biznes-s-ohanoy/" },
+  { label: "Подбор размера", href: "/podbor-razmera" },
+  { label: "Бизнес с Оханой", href: "/biznes-s-ohanoy" },
 ]
 const COMPANY = [
   { label: "О компании", href: "/p/about" },

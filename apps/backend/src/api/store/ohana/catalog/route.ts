@@ -28,6 +28,13 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const pg = req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION) as any
   const qp = req.query as Record<string, any>
   const categoryIds = list(qp.category_id)
+  // category_handle — раздел по ЧПУ вместе со всеми потомками (ссылки из подбора размера)
+  if (!categoryIds.length && qp.category_handle) {
+    const { rows } = await pg.raw(`with recursive t as (select id from product_category where handle = ? and deleted_at is null
+      union all select c.id from product_category c join t on c.parent_category_id = t.id where c.deleted_at is null) select id from t`, [String(qp.category_handle)])
+    categoryIds.push(...rows.map((r: any) => r.id))
+    if (!categoryIds.length) return res.json({ ids: [], count: 0, facets: { sizes: [], price_min: 0, price_max: 0, in_stock: 0, full_row: 0 } })
+  }
   const q = String(qp.q || "").trim()
   const sizes = new Set(list(qp.size).map((s) => s.toLowerCase()))
   const pmin = Number(qp.pmin) || 0, pmax = Number(qp.pmax) || 0
