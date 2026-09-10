@@ -30,7 +30,7 @@ import {
 } from "@medusajs/medusa/core-flows"
 import * as fs from "fs"
 
-const IMG_BASE = "https://api.ohanaopt.ru/images/detailed/"
+const IMG_BASE = "https://api.ohanaopt.ru/images/web/" // пережатые копии (≤1400px) из /images/detailed
 const ROOT_CATALOG = "456"
 const SHOWCASES = new Set(["494", "495", "496", "560"]) // Лето 2026, Big size, Школа, Осень/зима 2027
 
@@ -52,7 +52,7 @@ const num = (v: any) => { const n = parseFloat(String(v ?? "").replace(/\s| /g,
 function cleanTitle(name: string): string {
   let t = name.replace(/\s+/g, " ").trim()
   t = t.replace(/^\d{4,6}\s+/, "")                             // ведущий артикул
-  t = t.replace(/\s*\((?:цвет|модель|размер)[\s\S]*$/i, "")     // хвост «(Цвет голубой (moviy), размер 46 …)» — скобки вложенные, режем до конца
+  t = t.replace(/\s*\(\s*(?:цвет|размер)[\s\S]*$/i, "")         // хвост «( Цвет: …, размер 46 …)» — скобки вложенные, режем до конца
   t = t.replace(/\s+,/g, ",").replace(/\s{2,}/g, " ").trim()
   return t.charAt(0).toUpperCase() + t.slice(1)
 }

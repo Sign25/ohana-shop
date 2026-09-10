@@ -1,47 +1,20 @@
-"use client"
-
-import { Github } from "@medusajs/icons"
-import { Heading } from "@medusajs/ui"
-import Button from "@/modules/common/components/button"
+import LocalizedClientLink from "@/modules/common/components/localized-client-link"
 import Image from "next/image"
+
+/** Главные баннеры: те же креативы, что на текущем ohanaopt.ru (осень/зима → категория 560, «И в пир, и в мир» → женская одежда). */
+const banners = [
+  { href: "/categories/osen-zima-2027", src: "/hero/hero_autumn_family.jpg", w: 1280, h: 371, alt: "Осень/зима 2027 — тёплая одежда для всей семьи" },
+  { href: "/categories/zhenskaya-odezhda", src: "/hero/hero_pir_mir.jpg", w: 1932, h: 560, alt: "И в пир, и в мир, и в добрые люди — женская одежда" },
+]
 
 const Hero = () => {
   return (
-    <div className="h-[75vh] w-full border-b border-ui-border-base relative bg-neutral-100">
-      <Image
-        src="/hero-image.jpg"
-        alt="Hero background"
-        layout="fill"
-        quality={100}
-        priority
-      />
-      <div className="absolute inset-0 z-1 flex flex-col justify-center items-center text-center small:p-32 gap-6">
-        <span>
-          <p className="text-neutral-600 text-xs uppercase">
-            Be light on your feet
-          </p>
-
-          <Heading
-            level="h1"
-            className="text-6xl leading-10 text-ui-fg-base font-normal mt-10 mb-5"
-          >
-            Portable Bestsellers
-          </Heading>
-
-          <p className="leading-10 text-ui-fg-subtle font-normal text-lg">
-            See our widest selection of electronics
-          </p>
-        </span>
-        <a
-          href="https://github.com/medusajs/b2b-starter-medusa"
-          target="_blank"
-        >
-          <Button variant="secondary" className="rounded-2xl">
-            <Github />
-            Github Repository
-          </Button>
-        </a>
-      </div>
+    <div className="content-container flex flex-col gap-4 py-4">
+      {banners.map((b, i) => (
+        <LocalizedClientLink key={b.href} href={b.href} className="block overflow-hidden rounded-2xl bg-neutral-100">
+          <Image src={b.src} alt={b.alt} width={b.w} height={b.h} priority={i === 0} sizes="(max-width: 1440px) 100vw, 1440px" className="w-full h-auto" />
+        </LocalizedClientLink>
+      ))}
     </div>
   )
 }

@@ -13,14 +13,14 @@ export const convertToLocale = ({
   currency_code,
   minimumFractionDigits,
   maximumFractionDigits,
-  locale = "en-US",
+  locale = "ru-RU",
 }: ConvertToLocaleParams) => {
   return currency_code && !isEmpty(currency_code)
     ? new Intl.NumberFormat(locale, {
         style: "currency",
         currency: currency_code,
-        minimumFractionDigits,
-        maximumFractionDigits,
+        minimumFractionDigits: minimumFractionDigits ?? 0,
+        maximumFractionDigits: maximumFractionDigits ?? 2,
       }).format(amount)
     : amount.toString()
 }

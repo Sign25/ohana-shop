@@ -4,7 +4,6 @@ import AccountButton from "@/modules/account/components/account-button"
 import CartButton from "@/modules/cart/components/cart-button"
 import LocalizedClientLink from "@/modules/common/components/localized-client-link"
 import FilePlus from "@/modules/common/icons/file-plus"
-import LogoIcon from "@/modules/common/icons/logo"
 import { MegaMenuWrapper } from "@/modules/layout/components/mega-menu"
 import { RequestQuoteConfirmation } from "@/modules/quotes/components/request-quote-confirmation"
 import { RequestQuotePrompt } from "@/modules/quotes/components/request-quote-prompt"
@@ -27,8 +26,7 @@ export async function NavigationHeader() {
               href="/"
             >
               <h1 className="small:text-base text-sm font-medium flex items-center">
-                <LogoIcon className="inline mr-2" />
-                Medusa B2B Starter
+                <span className="text-lg font-semibold tracking-tight">Ohana</span><span className="ml-1 text-lg font-light text-zinc-500">market</span>
               </h1>
             </LocalizedClientLink>
 
@@ -47,9 +45,9 @@ export async function NavigationHeader() {
               <input
                 disabled
                 type="text"
-                placeholder="Search for products"
+                placeholder="Поиск по товарам"
                 className="bg-gray-100 text-zinc-900 px-4 py-2 rounded-full pr-10 shadow-borders-base hidden small:inline-block hover:cursor-not-allowed"
-                title="Install a search provider to enable product search"
+                title="Поиск подключим следующим шагом"
               />
             </div>
 
@@ -62,14 +60,14 @@ export async function NavigationHeader() {
                   // disabled={isPendingApproval}
                 >
                   <FilePlus />
-                  <span className="hidden small:inline-block">Quote</span>
+                  <span className="hidden small:inline-block">Запрос цены</span>
                 </button>
               </RequestQuoteConfirmation>
             ) : (
               <RequestQuotePrompt>
                 <button className="flex gap-1.5 items-center rounded-2xl bg-none shadow-none border-none hover:bg-neutral-100 px-2 py-1">
                   <FilePlus />
-                  <span className="hidden small:inline-block">Quote</span>
+                  <span className="hidden small:inline-block">Запрос цены</span>
                 </button>
               </RequestQuotePrompt>
             )}
