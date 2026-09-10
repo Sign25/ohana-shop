@@ -10,7 +10,7 @@ const InviteEmployeeCard = ({ company }: { company: QueryCompany }) => {
     <Container className="p-0 overflow-hidden">
       <div className="grid small:grid-cols-4 grid-cols-2 gap-4 p-4 border-b border-neutral-200">
         <div className="flex flex-col gap-y-2">
-          <Text className="font-medium text-neutral-950">Name</Text>
+          <Text className="font-medium text-neutral-950">Имя</Text>
           <Input name="first_name" label="Имя" />
         </div>
         <div className="flex flex-col gap-y-2 justify-end">
@@ -22,7 +22,7 @@ const InviteEmployeeCard = ({ company }: { company: QueryCompany }) => {
         </div>
       </div>
       <div className="flex items-center justify-end gap-2 bg-neutral-50 p-4">
-        <Button variant="primary" onClick={() => toast.info("Not implemented")}>
+        <Button variant="primary" onClick={() => toast.info("Смена пароля — через менеджера: 8 (991) 430-17-30")}>
           Send Invite
         </Button>
       </div>

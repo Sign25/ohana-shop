@@ -137,7 +137,7 @@ export default async function ApprovalCard({
           </span>
           {"·"}
           <span className="px-2">{`${numberOfLines} ${
-            numberOfLines > 1 ? "items" : "item"
+            numberOfLines > 1 ? "шт" : "шт"
           }`}</span>
           {type === "admin" && (
             <ApprovalCardActions cartWithApprovals={cartWithApprovals} />

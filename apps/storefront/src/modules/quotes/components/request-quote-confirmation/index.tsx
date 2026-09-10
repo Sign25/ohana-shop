@@ -58,7 +58,7 @@ export const RequestQuoteConfirmation = ({
           <div className="mt-[25px] flex justify-end gap-x-2">
             <Dialog.Close asChild>
               <Button variant="secondary" disabled={requesting}>
-                Cancel
+                Отмена
               </Button>
             </Dialog.Close>
 

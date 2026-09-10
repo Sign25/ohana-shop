@@ -11,7 +11,7 @@ const OrderDetails = ({ order }: OrderDetailsProps) => {
   return (
     <>
       <Heading level="h3" className="mb-2">
-        Details
+        Заказ
       </Heading>
 
       <div className="text-sm text-ui-fg-subtle overflow-auto">
@@ -30,7 +30,7 @@ const OrderDetails = ({ order }: OrderDetailsProps) => {
         </div>
 
         <Text>
-          We have sent the order confirmation details to{" "}
+          Подтверждение и счёт отправим на{" "}
           <span className="font-semibold">{order.email}</span>.
         </Text>
       </div>

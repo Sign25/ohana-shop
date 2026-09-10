@@ -35,13 +35,13 @@ const ApprovalSettingsCard = ({
     setIsSaving(true)
     await updateApprovalSettings(company.id, requiresAdminApproval).catch(
       () => {
-        toast.error("Error updating approval settings")
+        toast.error("Не удалось сохранить настройки согласования")
       }
     )
     setIsSaving(false)
     setIsEditing(false)
 
-    toast.success("Company updated")
+    toast.success("Данные компании сохранены")
   }
 
   return (
@@ -108,19 +108,19 @@ const ApprovalSettingsCard = ({
                   onClick={() => setIsEditing(false)}
                   disabled={isSaving}
                 >
-                  Cancel
+                  Отмена
                 </Button>
                 <Button
                   variant="primary"
                   onClick={handleSave}
                   isLoading={isSaving}
                 >
-                  Save
+                  Сохранить
                 </Button>
               </>
             ) : (
               <Button variant="secondary" onClick={() => setIsEditing(true)}>
-                Edit
+                Изменить
               </Button>
             )}
           </div>

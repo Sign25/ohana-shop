@@ -7,6 +7,7 @@ import CartButton from "@/modules/cart/components/cart-button"
 import LocalizedClientLink from "@/modules/common/components/localized-client-link"
 import FilePlus from "@/modules/common/icons/file-plus"
 import CatalogMenu from "@/modules/layout/components/catalog-menu"
+import MobileMenu from "@/modules/layout/components/mobile-menu"
 import TopBar from "@/modules/layout/components/top-bar"
 import { RequestQuoteConfirmation } from "@/modules/quotes/components/request-quote-confirmation"
 import { RequestQuotePrompt } from "@/modules/quotes/components/request-quote-prompt"
@@ -34,7 +35,8 @@ export async function NavigationHeader() {
     <div className="sticky top-0 inset-x-0 z-50 bg-white border-b border-oh-line">
       <TopBar />
       <header className="content-container">
-        <div className="flex items-center gap-4 py-3">
+        <div className="flex items-center gap-2 py-3 small:gap-4">
+          <MobileMenu categories={categories} />
           <LocalizedClientLink href="/" className="shrink-0" aria-label="Ohana Market — на главную">
             <Image src="/logo.png" alt="Ohana market" width={432} height={192} priority className="h-11 w-auto small:h-12" />
           </LocalizedClientLink>
@@ -43,7 +45,7 @@ export async function NavigationHeader() {
             <CatalogMenu categories={categories} />
           </div>
 
-          <form action="/ru/store" method="get" className="relative flex-1 min-w-0">
+          <form action="/ru/store" method="get" className="relative hidden flex-1 min-w-0 small:block">
             <input
               type="search"
               name="q"
@@ -83,6 +85,12 @@ export async function NavigationHeader() {
           </div>
         </div>
 
+        <form action="/ru/store" method="get" className="relative pb-3 small:hidden">
+          <input type="search" name="q" placeholder="Поиск по каталогу и артикулу" className="h-10 w-full rounded-pill border border-oh-line-2 bg-white pl-4 pr-11 text-sm text-oh-ink placeholder:text-oh-muted focus:border-oh-azure focus:outline-none" />
+          <button type="submit" className="absolute right-1 top-1 h-8 w-8 rounded-full text-oh-graphite" aria-label="Найти">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="mx-auto" aria-hidden><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
+          </button>
+        </form>
         <nav className="hidden small:flex items-center gap-7 pb-3 text-[13px] font-medium uppercase tracking-[0.06em] text-oh-graphite">
           {audiences.map((c) => (
             <LocalizedClientLink key={c.id} href={`/categories/${c.handle}`} className="hover:text-oh-azure">

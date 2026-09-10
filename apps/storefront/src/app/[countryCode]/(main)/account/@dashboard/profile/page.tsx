@@ -7,8 +7,8 @@ import { Metadata } from "next"
 import { notFound } from "next/navigation"
 
 export const metadata: Metadata = {
-  title: "Profile",
-  description: "View and edit профиль Ohana Market.",
+  title: "Профиль",
+  description: "Ваш профиль в Ohana Market",
 }
 
 export default async function Profile() {

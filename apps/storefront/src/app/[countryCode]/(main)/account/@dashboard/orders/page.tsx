@@ -9,8 +9,8 @@ import { Heading } from "@medusajs/ui"
 import { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Orders",
-  description: "Overview of your previous orders.",
+  title: "Заказы",
+  description: "Ваши заказы",
 }
 
 export default async function Orders() {
@@ -34,12 +34,12 @@ export default async function Orders() {
       data-testid="orders-page-wrapper"
     >
       <div className="mb-4">
-        <Heading>Orders</Heading>
+        <Heading>Заказы</Heading>
       </div>
       {approval_required && (
         <div>
           <Heading level="h2" className="text-neutral-700 mb-4">
-            Pending Approvals
+            Ждут согласования
           </Heading>
 
           <PendingCustomerApprovals cartsWithApprovals={carts_with_approvals} />
@@ -47,7 +47,7 @@ export default async function Orders() {
       )}
       <div>
         <Heading level="h2" className="text-neutral-700 mb-4">
-          Completed Orders
+          Оформленные заказы
         </Heading>
 
         <OrderOverview orders={orders} />

@@ -126,7 +126,7 @@ const EditAddress: React.FC<EditAddressProps> = ({
 
       <Modal isOpen={state} close={close} data-testid="edit-address-modal">
         <Modal.Title>
-          <Heading className="mb-2">Edit address</Heading>
+          <Heading className="mb-2">Изменить адрес</Heading>
         </Modal.Title>
         <form action={formAction}>
           <Modal.Body>
@@ -165,7 +165,7 @@ const EditAddress: React.FC<EditAddressProps> = ({
                 data-testid="address-1-input"
               />
               <Input
-                label="Apartment, suite, etc."
+                label="Квартира, офис, этаж"
                 name="address_2"
                 autoComplete="address-line2"
                 defaultValue={address.address_2 || undefined}
@@ -190,7 +190,7 @@ const EditAddress: React.FC<EditAddressProps> = ({
                 />
               </div>
               <Input
-                label="Province / State"
+                label="Регион / область"
                 name="province"
                 autoComplete="address-level1"
                 defaultValue={address.province || undefined}
@@ -227,7 +227,7 @@ const EditAddress: React.FC<EditAddressProps> = ({
                 className="h-10"
                 data-testid="cancel-button"
               >
-                Cancel
+                Отмена
               </Button>
               <SubmitButton data-testid="save-button">Save</SubmitButton>
             </div>

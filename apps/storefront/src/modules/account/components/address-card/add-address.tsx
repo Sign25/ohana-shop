@@ -46,13 +46,13 @@ const AddAddress = ({ region }: { region: HttpTypes.StoreRegion }) => {
         onClick={open}
         data-testid="add-address-button"
       >
-        <span className="text-base-semi">New address</span>
+        <span className="text-base-semi">Новый адрес</span>
         <Plus />
       </button>
 
       <Modal isOpen={state} close={close} data-testid="add-address-modal">
         <Modal.Title>
-          <Heading className="mb-2">Add address</Heading>
+          <Heading className="mb-2">Новый адрес доставки</Heading>
         </Modal.Title>
         <form action={formAction}>
           <Modal.Body>
@@ -87,7 +87,7 @@ const AddAddress = ({ region }: { region: HttpTypes.StoreRegion }) => {
                 data-testid="address-1-input"
               />
               <Input
-                label="Apartment, suite, etc."
+                label="Квартира, офис, этаж"
                 name="address_2"
                 autoComplete="address-line2"
                 data-testid="address-2-input"
@@ -109,7 +109,7 @@ const AddAddress = ({ region }: { region: HttpTypes.StoreRegion }) => {
                 />
               </div>
               <Input
-                label="Province / State"
+                label="Регион / область"
                 name="province"
                 autoComplete="address-level1"
                 data-testid="state-input"
@@ -146,7 +146,7 @@ const AddAddress = ({ region }: { region: HttpTypes.StoreRegion }) => {
                 className="h-10"
                 data-testid="cancel-button"
               >
-                Cancel
+                Отмена
               </Button>
               <SubmitButton data-testid="save-button">Save</SubmitButton>
             </div>

@@ -42,8 +42,8 @@ const ApprovalCardActions = ({
     if (!pendingAdminApproval) return
 
     const confirmed = await dialog({
-      title: "Are you sure you want to approve this cart?",
-      description: "This action cannot be undone.",
+      title: "Согласовать этот заказ?",
+      description: "Отменить согласование будет нельзя.",
     })
 
     if (!confirmed) return
@@ -57,8 +57,8 @@ const ApprovalCardActions = ({
     if (!pendingAdminApproval) return
 
     const confirmed = await dialog({
-      title: "Are you sure you want to reject this cart?",
-      description: "This action cannot be undone.",
+      title: "Отклонить этот заказ?",
+      description: "Отменить отклонение будет нельзя.",
     })
 
     if (!confirmed) return

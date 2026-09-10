@@ -10,7 +10,7 @@ const SecurityCard = ({ customer }: { customer: B2BCustomer }) => {
       <Container className="p-0 overflow-hidden">
         <div className="grid grid-cols-2 gap-4 border-b border-neutral-200 p-4">
           <div className="flex flex-col gap-y-2">
-            <Text className="font-medium text-neutral-950">Password</Text>
+            <Text className="font-medium text-neutral-950">Пароль</Text>
             <Text className=" text-neutral-500">***************</Text>
           </div>
         </div>
@@ -18,7 +18,7 @@ const SecurityCard = ({ customer }: { customer: B2BCustomer }) => {
         <div className="flex items-center justify-end gap-2 bg-neutral-50 p-4">
           <Button
             variant="secondary"
-            onClick={() => toast.info("Not implemented")}
+            onClick={() => toast.info("Смена пароля — через менеджера: 8 (991) 430-17-30")}
           >
             Edit
           </Button>

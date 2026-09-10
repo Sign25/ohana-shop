@@ -36,7 +36,7 @@ export const PromptModal = ({
           <div className="flex gap-x-2 items-end justify-end self-end">
             <Dialog.Close asChild>
               <Button variant="secondary" size="small">
-                Cancel
+                Отмена
               </Button>
             </Dialog.Close>
             <Button

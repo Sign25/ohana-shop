@@ -30,12 +30,12 @@ const CompanyCard = ({
   const handleSave = async () => {
     setIsSaving(true)
     await updateCompany(companyData).catch(() => {
-      toast.error("Error updating company")
+      toast.error("Не удалось сохранить данные компании")
     })
     setIsSaving(false)
     setIsEditing(false)
 
-    toast.success("Company updated")
+    toast.success("Данные компании сохранены")
   }
 
   const currenciesInRegions = Array.from(
@@ -67,9 +67,9 @@ const CompanyCard = ({
           }}
         >
           <div className="flex flex-col gap-y-2">
-            <Text className="font-medium text-neutral-950">Company Name</Text>
+            <Text className="font-medium text-neutral-950">Название компании / ИП</Text>
             <Input
-              label="Company Name"
+              label="Название компании / ИП"
               name="name"
               value={companyData.name || ""}
               onChange={(e) =>
@@ -89,7 +89,7 @@ const CompanyCard = ({
             />
           </div>
           <div className="flex flex-col gap-y-2">
-            <Text className="font-medium text-neutral-950">Phone</Text>
+            <Text className="font-medium text-neutral-950">Телефон</Text>
             <Input
               label="Телефон"
               name="phone"
@@ -100,7 +100,7 @@ const CompanyCard = ({
             />
           </div>
           <div className="flex flex-col gap-y-2">
-            <Text className="font-medium text-neutral-950">Address</Text>
+            <Text className="font-medium text-neutral-950">Адрес</Text>
             <Input
               label="Адрес (улица, дом, офис или терминал ТК)"
               name="address"
@@ -111,7 +111,7 @@ const CompanyCard = ({
             />
           </div>
           <div className="flex flex-col gap-y-2">
-            <Text className="font-medium text-neutral-950">City</Text>
+            <Text className="font-medium text-neutral-950">Город</Text>
             <Input
               label="Город"
               name="city"
@@ -122,9 +122,9 @@ const CompanyCard = ({
             />
           </div>
           <div className="flex flex-col gap-y-2">
-            <Text className="font-medium text-neutral-950">State</Text>
+            <Text className="font-medium text-neutral-950">Регион</Text>
             <Input
-              label="State"
+              label="Регион / область"
               name="state"
               value={companyData.state || ""}
               onChange={(e) =>
@@ -133,9 +133,9 @@ const CompanyCard = ({
             />
           </div>
           <div className="flex flex-col gap-y-2">
-            <Text className="font-medium text-neutral-950">Zip</Text>
+            <Text className="font-medium text-neutral-950">Индекс</Text>
             <Input
-              label="Zip"
+              label="Индекс"
               name="zip"
               value={companyData.zip || ""}
               onChange={(e) =>
@@ -144,7 +144,7 @@ const CompanyCard = ({
             />
           </div>
           <div className="flex flex-col gap-y-2">
-            <Text className="font-medium text-neutral-950">Country</Text>
+            <Text className="font-medium text-neutral-950">Страна</Text>
             <Select
               name="country"
               value={companyData.country || ""}
@@ -160,7 +160,7 @@ const CompanyCard = ({
             </Select>
           </div>
           <div className="flex flex-col gap-y-2">
-            <Text className="font-medium text-neutral-950">Currency</Text>
+            <Text className="font-medium text-neutral-950">Валюта</Text>
             <Select
               name="currency_code"
               value={companyData.currency_code || ""}
@@ -213,7 +213,7 @@ const CompanyCard = ({
           )}
         >
           <div className="flex flex-col gap-y-2">
-            <Text className="font-medium text-neutral-950">Company Name</Text>
+            <Text className="font-medium text-neutral-950">Название компании / ИП</Text>
             <Text className=" text-neutral-500">{company.name}</Text>
           </div>
           <div className="flex flex-col gap-y-2">
@@ -221,18 +221,18 @@ const CompanyCard = ({
             <Text className=" text-neutral-500">{company.email}</Text>
           </div>
           <div className="flex flex-col gap-y-2">
-            <Text className="font-medium text-neutral-950">Phone</Text>
+            <Text className="font-medium text-neutral-950">Телефон</Text>
             <Text className=" text-neutral-500">{company.phone}</Text>
           </div>
           <div className="flex flex-col gap-y-2">
-            <Text className="font-medium text-neutral-950">Address</Text>
+            <Text className="font-medium text-neutral-950">Адрес</Text>
             <Text className=" text-neutral-500">
               {company.address}, {company.city}, {company.state}, {company.zip},{" "}
               {company.country?.toUpperCase()}
             </Text>
           </div>
           <div className="flex flex-col gap-y-2">
-            <Text className="font-medium text-neutral-950">Currency</Text>
+            <Text className="font-medium text-neutral-950">Валюта</Text>
             <Text className=" text-neutral-500">
               {company.currency_code?.toUpperCase()} (
               {currencySymbolMap[company.currency_code!]})
@@ -257,19 +257,19 @@ const CompanyCard = ({
                 onClick={() => setIsEditing(false)}
                 disabled={isSaving}
               >
-                Cancel
+                Отмена
               </Button>
               <Button
                 variant="primary"
                 onClick={handleSave}
                 isLoading={isSaving}
               >
-                Save
+                Сохранить
               </Button>
             </>
           ) : (
             <Button variant="secondary" onClick={() => setIsEditing(true)}>
-              Edit
+              Изменить
             </Button>
           )}
         </div>
