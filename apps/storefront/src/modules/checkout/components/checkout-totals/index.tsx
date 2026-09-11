@@ -62,7 +62,7 @@ const CheckoutTotals: React.FC<{
         </div>
         {!!gift_card_total && (
           <div className="flex items-center justify-between">
-            <Text>Gift card</Text>
+            <Text>Подарочная карта</Text>
             <Text
               className="text-ui-fg-interactive"
               data-testid="cart-gift-card-amount"

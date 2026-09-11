@@ -65,7 +65,7 @@ const QuoteMessages = ({
   return (
     <Container className="divide-y divide-dashed p-0 ">
       <div className="flex items-center justify-between px-6 py-4">
-        <Heading level="h3">Messages</Heading>
+        <Heading level="h3">Сообщения</Heading>
       </div>
 
       <div>
@@ -127,7 +127,7 @@ const QuoteMessages = ({
                   <Select {...field} onValueChange={onChange} value={value}>
                     <Select.Trigger className="bg-ui-bg-base" ref={ref}>
                       <Select.Value />
-                      {value ? <Select.Value /> : "Select Item"}
+                      {value ? <Select.Value /> : "Выберите позицию"}
                     </Select.Trigger>
 
                     <Select.Content>

@@ -54,7 +54,7 @@ const ImageOrPlaceholder = ({
   return image ? (
     <Image
       src={image}
-      alt="Thumbnail"
+      alt="Фото товара"
       className={clx("absolute inset-0 object-contain", {
         "p-4": type === "full",
         "p-2": type === "preview",

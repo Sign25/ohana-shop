@@ -97,7 +97,7 @@ export async function updateCart(data: HttpTypes.StoreUpdateCart) {
   const cartId = await getCartId()
 
   if (!cartId) {
-    throw new Error("No existing cart found, please create one before updating")
+    throw new Error("Корзина не найдена — добавьте товар заново")
   }
 
   const headers = {
@@ -140,12 +140,12 @@ export async function addToCart({
   countryCode: string
 }) {
   if (!variantId) {
-    throw new Error("Missing variant ID when adding to cart")
+    throw new Error("Не выбран размер")
   }
 
   const cart = await getOrSetCart(countryCode)
   if (!cart) {
-    throw new Error("Error retrieving or creating cart")
+    throw new Error("Не удалось открыть корзину — обновите страницу")
   }
 
   const headers = {
@@ -182,7 +182,7 @@ export async function addToCartBulk({
   const cart = await getOrSetCart(countryCode)
 
   if (!cart) {
-    throw new Error("Error retrieving or creating cart")
+    throw new Error("Не удалось открыть корзину — обновите страницу")
   }
 
   const headers = {
@@ -275,7 +275,7 @@ export async function deleteLineItem(lineId: string) {
 export async function emptyCart() {
   const cart = await retrieveCart()
   if (!cart) {
-    throw new Error("No existing cart found when emptying cart")
+    throw new Error("Корзина не найдена")
   }
 
   for (const item of cart.items || []) {
@@ -330,7 +330,7 @@ export async function initiatePaymentSession(
 export async function applyPromotions(codes: string[]) {
   const cartId = await getCartId()
   if (!cartId) {
-    throw new Error("No existing cart found")
+    throw new Error("Корзина не найдена")
   }
 
   await updateCart({ promo_codes: codes })
@@ -345,7 +345,7 @@ export async function applyPromotions(codes: string[]) {
 
 export async function applyGiftCard(code: string) {
   //   const cartId = getCartId()
-  //   if (!cartId) return "No cartId cookie found"
+  //   if (!cartId) return "Корзина не найдена"
   //   try {
   //     await updateCart(cartId, { gift_cards: [{ code }] }).then(() => {
   //       revalidateTag(getCacheTag("carts"))
@@ -357,7 +357,7 @@ export async function applyGiftCard(code: string) {
 
 export async function removeDiscount(code: string) {
   // const cartId = getCartId()
-  // if (!cartId) return "No cartId cookie found"
+  // if (!cartId) return "Корзина не найдена"
   // try {
   //   await deleteDiscount(cartId, code)
   //   revalidateTag(getCacheTag("carts"))
@@ -372,7 +372,7 @@ export async function removeGiftCard(
   // giftCards: GiftCard[]
 ) {
   //   const cartId = getCartId()
-  //   if (!cartId) return "No cartId cookie found"
+  //   if (!cartId) return "Корзина не найдена"
   //   try {
   //     await updateCart(cartId, {
   //       gift_cards: [...giftCards]
@@ -402,14 +402,14 @@ export async function submitPromotionForm(
 export async function setShippingAddress(formData: FormData) {
   try {
     if (!formData) {
-      throw new Error("No form data found when setting addresses")
+      throw new Error("Заполните адрес")
     }
 
     const cartId = await getCartId()
     const customer = await retrieveCustomer()
 
     if (!cartId) {
-      throw new Error("No existing cart found when setting addresses")
+      throw new Error("Корзина не найдена")
     }
 
     const data = {
@@ -440,7 +440,7 @@ export async function setBillingAddress(formData: FormData) {
   try {
     const cartId = getCartId()
     if (!cartId) {
-      throw new Error("No existing cart found when setting billing address")
+      throw new Error("Корзина не найдена")
     }
 
     const data = {
@@ -471,7 +471,7 @@ export async function setContactDetails(
   try {
     const cartId = getCartId()
     if (!cartId) {
-      throw new Error("No existing cart found when setting contact details")
+      throw new Error("Корзина не найдена")
     }
     const data = {
       email: formData.get("email") as string,
@@ -498,7 +498,7 @@ export async function placeOrder(
   const id = cartId || (await getCartId())
 
   if (!id) {
-    throw new Error("No existing cart found when placing an order")
+    throw new Error("Корзина не найдена")
   }
 
   const headers = {

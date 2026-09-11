@@ -40,7 +40,7 @@ const Register = ({ setCurrentView }: Props) => {
         <div className="grid w-full grid-cols-1 gap-3 small:grid-cols-2">
           <Input label="Имя" name="first_name" required autoComplete="given-name" value={f.first_name} onChange={onChange} data-testid="first-name-input" className="bg-white" />
           <Input label="Фамилия" name="last_name" autoComplete="family-name" value={f.last_name} onChange={onChange} data-testid="last-name-input" className="bg-white" />
-          <Input label="Email" name="email" required type="email" autoComplete="email" value={f.email} onChange={onChange} data-testid="email-input" className="bg-white" />
+          <Input label="Эл. почта" name="email" required type="email" autoComplete="email" value={f.email} onChange={onChange} data-testid="email-input" className="bg-white" />
           <Input label="Телефон" name="phone" required type="tel" autoComplete="tel" value={f.phone} onChange={onChange} data-testid="phone-input" className="bg-white" />
           <Input label="Компания или ИП" name="company_name" required autoComplete="organization" value={f.company_name} onChange={onChange} data-testid="company-name-input" className="bg-white small:col-span-2" />
           <Input label="Город" name="company_city" autoComplete="address-level2" value={f.company_city} onChange={onChange} data-testid="company-city-input" className="bg-white" />

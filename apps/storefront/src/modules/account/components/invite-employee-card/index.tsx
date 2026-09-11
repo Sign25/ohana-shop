@@ -17,8 +17,8 @@ const InviteEmployeeCard = ({ company }: { company: QueryCompany }) => {
           <Input name="last_name" label="Фамилия" />
         </div>
         <div className="flex flex-col col-span-2 gap-y-2">
-          <Text className="font-medium text-neutral-950">Email</Text>
-          <Input name="email" label="Enter an email" />
+          <Text className="font-medium text-neutral-950">Эл. почта</Text>
+          <Input name="email" label="Введите эл. почту" />
         </div>
       </div>
       <div className="flex items-center justify-end gap-2 bg-neutral-50 p-4">

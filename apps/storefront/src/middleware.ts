@@ -38,7 +38,7 @@ async function getRegionMap(cacheId: string) {
 
     if (!regions?.length) {
       throw new Error(
-        "No regions found. Please set up regions in your Medusa Admin."
+        "Регионы не настроены — создайте регион в админке."
       )
     }
 

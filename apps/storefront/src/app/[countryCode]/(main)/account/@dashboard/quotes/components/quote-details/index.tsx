@@ -170,7 +170,7 @@ const QuoteDetails: React.FC<QuoteDetailsProps> = ({
 
             <div className="text-sm text-ui-fg-subtle">
               <div className="flex justify-between">
-                <Text>Email</Text>
+                <Text>Эл. почта</Text>
                 <Text>{quote.customer?.email || "-"}</Text>
               </div>
 

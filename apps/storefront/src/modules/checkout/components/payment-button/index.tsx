@@ -136,7 +136,7 @@ const RequestApprovalButton = ({
           onClick={createApproval}
           isLoading={submitting}
         >
-          {isPendingAdminApproval ? "Approval Requested" : "Request Approval"}
+          {isPendingAdminApproval ? "Отправлено на согласование" : "Отправить на согласование"}
         </Button>
       </Container>
     </>
@@ -310,7 +310,7 @@ const PayPalPaymentButton = ({
         onPaymentCompleted()
       })
       .catch(() => {
-        setErrorMessage(`An unknown error occurred, please try again.`)
+        setErrorMessage(`Что-то пошло не так, попробуйте ещё раз.`)
         setSubmitting(false)
       })
   }

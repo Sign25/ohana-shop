@@ -78,9 +78,9 @@ const CompanyCard = ({
             />
           </div>
           <div className="flex flex-col gap-y-2">
-            <Text className="font-medium text-neutral-950">Email</Text>
+            <Text className="font-medium text-neutral-950">Эл. почта</Text>
             <Input
-              label="Email"
+              label="Эл. почта"
               name="email"
               value={companyData.email || ""}
               onChange={(e) =>
@@ -217,7 +217,7 @@ const CompanyCard = ({
             <Text className=" text-neutral-500">{company.name}</Text>
           </div>
           <div className="flex flex-col gap-y-2">
-            <Text className="font-medium text-neutral-950">Email</Text>
+            <Text className="font-medium text-neutral-950">Эл. почта</Text>
             <Text className=" text-neutral-500">{company.email}</Text>
           </div>
           <div className="flex flex-col gap-y-2">

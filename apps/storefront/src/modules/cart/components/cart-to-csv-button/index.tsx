@@ -27,7 +27,7 @@ const CartToCsvButton = ({ cart }: CartToCsvButtonProps) => {
           suggestedName: "korzina-ohana.csv",
           startIn: "downloads",
           types: [
-            { description: "CSV File", accept: { "text/csv": [".csv"] } },
+            { description: "Файл CSV", accept: { "text/csv": [".csv"] } },
           ],
         })
         const writable = await fileHandle.createWritable()

@@ -78,7 +78,7 @@ const ProfileCard = ({ customer }: { customer: B2BCustomer }) => {
             />
           </div>
           <div className="flex flex-col gap-y-2">
-            <Text className="font-medium text-neutral-950">Email</Text>
+            <Text className="font-medium text-neutral-950">Эл. почта</Text>
             <Text className=" text-neutral-500">{customer.email}</Text>
           </div>
           <div className="flex flex-col gap-y-2">
@@ -111,7 +111,7 @@ const ProfileCard = ({ customer }: { customer: B2BCustomer }) => {
             <Text className=" text-neutral-500">{customer.last_name}</Text>
           </div>
           <div className="flex flex-col gap-y-2">
-            <Text className="font-medium text-neutral-950">Email</Text>
+            <Text className="font-medium text-neutral-950">Эл. почта</Text>
             <Text className=" text-neutral-500">{customer.email}</Text>
           </div>
           <div className="flex flex-col gap-y-2">

@@ -229,7 +229,7 @@ const EditAddress: React.FC<EditAddressProps> = ({
               >
                 Отмена
               </Button>
-              <SubmitButton data-testid="save-button">Save</SubmitButton>
+              <SubmitButton data-testid="save-button">Сохранить</SubmitButton>
             </div>
           </Modal.Footer>
         </form>

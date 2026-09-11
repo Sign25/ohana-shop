@@ -62,7 +62,7 @@ const ApprovalSettingsCard = ({
             <div className="flex flex-col gap-y-2">
               <Text className="flex items-center gap-x-2 font-medium text-neutral-950">
                 Requires Admin Approval
-                <Tooltip content="This setting determines whether orders require admin approval before being processed. If enabled, orders will be held until an admin approves them.">
+                <Tooltip content="Если включено, заказы сотрудников компании ждут подтверждения администратора компании и только потом уходят в обработку.">
                   <InformationCircleSolid className="w-4 h-4" />
                 </Tooltip>
               </Text>
@@ -84,7 +84,7 @@ const ApprovalSettingsCard = ({
             <div className="flex flex-col gap-y-2">
               <Text className="flex items-center gap-x-2 font-medium text-neutral-950">
                 Requires Sales Manager Approval
-                <Tooltip content="This setting determines whether orders require sales manager approval before being processed. If enabled, orders will be held until a sales manager approves them.">
+                <Tooltip content="Если включено, заказы ждут подтверждения менеджера Ohana и только потом уходят в обработку.">
                   <InformationCircleSolid className="w-4 h-4" />
                 </Tooltip>
               </Text>

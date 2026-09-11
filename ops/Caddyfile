@@ -1,0 +1,43 @@
+{
+	email molchanovev@gmail.com
+}
+
+# API + админка Medusa
+api.ohanaopt.ru {
+	encode zstd gzip
+	# фото каталога (перенесены с CS-Cart), отдаются статикой
+	handle_path /images/* {
+		root * /srv/ohana/shared/images
+		header Cache-Control "public, max-age=2592000, immutable"
+		file_server
+	}
+	# загрузки из админки (баннеры)
+	handle_path /uploads/* {
+		root * /srv/ohana/shared/uploads
+		header Cache-Control "public, max-age=604800"
+		file_server
+	}
+	# админка Medusa: язык по умолчанию — русский (если пользователь ещё не выбрал язык, cookie lng нет)
+	@nolng {
+		path /app*
+		not header Cookie *lng=*
+	}
+	header @nolng +Set-Cookie "lng=ru; Path=/; Max-Age=31536000; SameSite=Lax; Secure"
+	reverse_proxy 127.0.0.1:9000
+	log {
+		output file /var/log/caddy/api.log
+	}
+}
+
+# Витрина Next.js
+new.ohanaopt.ru {
+	encode zstd gzip
+	# обмен с 1С (узел ОбменССайтом) — на бэкенд, чтобы после переключения домена адрес остался /commerceml
+	handle /commerceml* {
+		reverse_proxy 127.0.0.1:9000
+	}
+	reverse_proxy 127.0.0.1:8000
+	log {
+		output file /var/log/caddy/store.log
+	}
+}

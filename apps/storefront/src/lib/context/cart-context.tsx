@@ -83,7 +83,7 @@ export function CartProvider({
           (approval) => approval.status === ApprovalStatusType.PENDING
         )
       ) {
-        toast.error("Cart is locked for approval.")
+        toast.error("Корзина заблокирована до согласования.")
         return
       }
 
@@ -169,10 +169,10 @@ export function CartProvider({
           })),
           countryCode: countryCode as string,
         }).catch((e) => {
-          if (e.message === "Cart is pending approval") {
-            toast.error("Cart is locked for approval.")
+          if (e.message === "Корзина ждёт согласования") {
+            toast.error("Корзина заблокирована до согласования.")
           } else {
-            toast.error("Failed to add to cart")
+            toast.error("Не удалось добавить в корзину")
           }
           setOptimisticCart(prevCart)
         })
@@ -217,7 +217,7 @@ export function CartProvider({
     setIsUpdatingCart(true)
 
     await deleteLineItem(lineItem).catch((e) => {
-      toast.error("Failed to delete item")
+      toast.error("Не удалось удалить позицию")
       setOptimisticCart(prevCart)
     })
   }
@@ -278,7 +278,7 @@ export function CartProvider({
         lineId: lineItem,
         data: { quantity },
       }).catch((e) => {
-        toast.error("Failed to update cart quantity")
+        toast.error("Не удалось изменить количество")
         setOptimisticCart(prevCart)
       })
     }
@@ -297,7 +297,7 @@ export function CartProvider({
     setIsUpdatingCart(true)
 
     await emptyCart().catch((e) => {
-      toast.error("Failed to empty cart")
+      toast.error("Не удалось очистить корзину")
       setOptimisticCart(prevCart)
     })
   }

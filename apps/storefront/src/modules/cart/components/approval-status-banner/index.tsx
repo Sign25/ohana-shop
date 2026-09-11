@@ -16,7 +16,7 @@ const ApprovalStatusBanner = ({ cart }: { cart: B2BCart }) => {
       {cartApprovalStatus === ApprovalStatusType.PENDING && (
         <>
           <LockClosedSolid className="w-4 h-4" />
-          <Text className="text-left">This cart is locked for approval.</Text>
+          <Text className="text-left">Корзина заблокирована до согласования.</Text>
         </>
       )}
 
