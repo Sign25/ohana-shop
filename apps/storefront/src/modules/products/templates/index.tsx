@@ -11,6 +11,7 @@ import ProductActionsWrapper from "./product-actions-wrapper"
 import ProductFacts from "../components/product-facts"
 import EcDetail from "@/modules/analytics/ec-detail"
 import ProductAlternatives from "@/modules/products/components/product-alternatives"
+import { getWbRatings, HIT_MIN_REVIEWS } from "@/lib/data/wb"
 
 type ProductTemplateProps = {
   product: HttpTypes.StoreProduct
@@ -18,8 +19,11 @@ type ProductTemplateProps = {
   countryCode: string
 }
 
-const ProductTemplate: React.FC<ProductTemplateProps> = ({ product, region, countryCode }) => {
+const ProductTemplate = async ({ product, region, countryCode }: ProductTemplateProps) => {
   if (!product || !product.id) return notFound()
+  const code = String((product.metadata as any)?.code || "")
+  const wb = code ? (await getWbRatings([code]))[code] : null
+  const hit = !!wb && wb.count >= HIT_MIN_REVIEWS
 
   return (
     <div className="bg-oh-paper/60">
@@ -27,7 +31,7 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({ product, region, coun
         <EcDetail product={product} />
         <div className="grid w-full grid-cols-1 gap-6 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]" data-testid="product-container">
           <div className="flex flex-col gap-4">
-            <ImageGallery product={product} />
+            <ImageGallery product={product} hit={hit} />
             <Suspense fallback={null}>
               <ProductAlternatives productId={product.id} currentColor={String((product.metadata as any)?.color_label || "") || undefined} />
             </Suspense>

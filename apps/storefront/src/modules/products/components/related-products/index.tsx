@@ -2,6 +2,7 @@ import { listProducts } from "@/lib/data/products"
 import { getRegion } from "@/lib/data/regions"
 import { HttpTypes } from "@medusajs/types"
 import Product from "../product-preview"
+import { getWbRatings } from "@/lib/data/wb"
 
 /** «Похожие товары» — из той же категории, что и текущий товар */
 export default async function RelatedProducts({ product, countryCode }: { product: HttpTypes.StoreProduct; countryCode: string }) {
@@ -20,6 +21,7 @@ export default async function RelatedProducts({ product, countryCode }: { produc
     response.products.filter((p) => p.id !== product.id).slice(0, 4)
   )
   if (!products.length) return null
+  const wb = await getWbRatings(products.map((p) => String((p.metadata as any)?.code || "")))
 
   return (
     <div className="flex flex-col gap-4 py-6">
@@ -27,7 +29,7 @@ export default async function RelatedProducts({ product, countryCode }: { produc
       <ul className="grid grid-cols-2 gap-3 small:grid-cols-4">
         {products.map((p) => (
           <li key={p.id}>
-            <Product region={region} product={p} />
+            <Product region={region} product={p} wb={wb[String((p.metadata as any)?.code || "")]} />
           </li>
         ))}
       </ul>

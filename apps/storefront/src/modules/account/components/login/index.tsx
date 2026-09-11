@@ -28,7 +28,18 @@ const Login = ({ setCurrentView }: Props) => {
             <Text className="text-[13px] text-oh-graphite">Запомнить меня</Text>
           </div>
         </div>
-        <ErrorMessage error={message ? "Не удалось войти: проверьте email и пароль" : null} data-testid="login-error-message" />
+        <ErrorMessage
+          error={
+            message === "no_account"
+              ? "Аккаунта с такой почтой нет. Проверьте адрес или зарегистрируйте компанию — это бесплатно."
+              : message === "wrong_password"
+              ? "Пароль не подходит. Если забыли — напишите на info@ohanamarket.ru, восстановим вручную."
+              : message
+              ? "Не удалось войти: проверьте email и пароль"
+              : null
+          }
+          data-testid="login-error-message"
+        />
         <div className="mt-5 flex flex-col gap-2">
           <SubmitButton data-testid="sign-in-button" className="w-full !rounded-pill !bg-oh-primary hover:!bg-oh-primary-hover !border-none !shadow-none">
             Войти

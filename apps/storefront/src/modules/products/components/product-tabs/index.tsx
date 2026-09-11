@@ -1,13 +1,15 @@
-"use client"
-
 import { productSpecs } from "@/lib/util/ohana"
 import { HttpTypes } from "@medusajs/types"
-import Accordion from "./accordion"
+import ProductTabsView from "./view"
 import SizeChart from "@/modules/products/components/size-chart"
+import WbReviews from "@/modules/products/components/wb-reviews"
+import { getWbProduct } from "@/lib/data/wb"
 
 /** Описание приходит из 1С HTML-ом; характеристики — из metadata товара (см. import-cscart.ts) */
-const ProductTabs = ({ product }: { product: HttpTypes.StoreProduct }) => {
+const ProductTabs = async ({ product }: { product: HttpTypes.StoreProduct }) => {
   const specs = productSpecs(product)
+  const code = String((product.metadata as any)?.code || "")
+  const wb = code ? await getWbProduct(code, 0, 10) : { rating: null, reviews: [], distribution: {} }
   const cats = (product.categories || []) as any[]
   const kids = cats.some((c) => /девоч|мальчик|детск|malchik|devoch|detsk/i.test(`${c.name} ${c.handle}`)) || /^(9|1[0-4])\d\b/.test(String((product.metadata as any)?.size_range || ""))
   const clothing = !cats.some((c) => /продукт|напит|текстиль для дома|аксессуар/i.test(String(c.name)))
@@ -15,19 +17,10 @@ const ProductTabs = ({ product }: { product: HttpTypes.StoreProduct }) => {
     { label: "Описание", component: <DescriptionTab html={product.description || ""} /> },
     { label: "Характеристики", component: <SpecsTab rows={specs} /> },
     ...(clothing ? [{ label: "Таблица размеров", component: <SizeChart kids={kids} /> }] : []),
+    ...(wb.rating && wb.rating.count ? [{ label: `Отзывы (${wb.rating.count})`, component: <WbReviews code={code} rating={wb.rating} initial={wb.reviews} distribution={wb.distribution} /> }] : []),
   ]
 
-  return (
-    <div className="w-full">
-      <Accordion type="multiple" defaultValue={["Описание", "Характеристики"]} className="flex flex-col gap-y-2">
-        {tabs.map((tab) => (
-          <Accordion.Item className="oh-card px-6 small:px-10" key={tab.label} title={tab.label} headingSize="medium" value={tab.label}>
-            {tab.component}
-          </Accordion.Item>
-        ))}
-      </Accordion>
-    </div>
-  )
+  return <ProductTabsView tabs={tabs} />
 }
 
 const DescriptionTab = ({ html }: { html: string }) => {

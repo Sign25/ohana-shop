@@ -97,3 +97,19 @@ python3 cdp_shot.py "https://new.ohanaopt.ru/ru" out.png '[{"name":"_medusa_cach
 ## Бэкапы
 - База: `sudo -u postgres pg_dump ohana_shop | gzip > /srv/ohana/backups/db-$(date +%F).sql.gz` (добавить в cron при запуске).
 - Фото: `/srv/ohana/shared/images` (копия оригиналов есть на старом сервере).
+
+## Карточка товара, каталог и инструменты покупателя (перенос механик старого сайта, 11.09.2026)
+
+- **Три механики продажи** (`lib/util/ohana.ts: saleMode`): поштучно кратно упаковке (каталог ОПТ+РОЗН), комплектом — полной размерной линейкой («Номенклатура 2026», `product.metadata.lineika/set_qty`, один вариант «Комплект»), упаковками (продукты, `variant.metadata.pack_unit` 'S' — цена за штуку / 'Y' — цена за упаковку). Разметка: `scripts/mark-lineika.ts`; импорт CommerceML создаёт комплекты одним вариантом.
+- **«Ваш расчёт»** на карточке (`product-variants-table`): цена на уровне опт / крупный опт / акция с учётом суммы корзины (`retrieveCartSummary`), экономия, вес, итог, прогресс до 35 000 / 100 000 ₽. Добавление в корзину — только через `addToCartEventBus` (CartProvider в шапке сам шлёт bulk; прямой вызов `addToCartBulk` дублирует позиции).
+- **Акция**: прайс-лист «Акция» типа sale применяется Medusa сама → `calculated_amount` = акция, `original_amount` = опт (`variantOpt`/`variantSale`). Акция показывается только если ниже опта.
+- **Бейджи** (`product-badges`): Акция, Новинка (после 12.09.2026, 21 день), Big size, Осень/зима, Комплект/Упаковка, «Хит продаж» (≥1000 отзывов WB).
+- **«Другие расцветки»**: регистр 1С БИТ_АльтернативыНоменклатуры → `scripts/sync-1c-alternatives.ts` → `product.metadata.alt_group` → `/store/ohana/alternatives` → карусель под галереей.
+- **«Мне это нужно»** для распроданных: модель `Demand` (модуль content, таблица `ohana_demand`), `POST /store/ohana/demand`, виджет в админке товара «Ждут поступления» (`/admin/ohana/demand`).
+- **Таблица размеров** — вкладка (взрослые / брюки / дети) + ссылка на подбор.
+- **Каталог** (`/store/ohana/catalog`): по умолчанию только в наличии (`stock=all` — все), теги `sale=1`, `new=1`, сортировка `order=hits` (по отзывам WB), товары без фото скрыты. Чипы на главной: Новинки / Акции / Хиты продаж.
+- **Общие промо-картинки** («Лауреат премий», схемы размеров): `scripts/fix-shared-images.ts` (md5 у ≥10 товаров → в конец галереи; без своего фото → thumbnail снят, список `/srv/ohana/logs/no-photo.tsv`, 57 товаров). **Архив 1С**: `scripts/unpublish-1c-archive.ts` (папка «архив» + двойник артикула → draft). Оба — в ночном конвейере.
+- **Отзывы Wildberries**: таблицы `ohana_wb_rating` / `ohana_wb_review` (модуль content), перенос со старого сайта `scripts/import-wb-tsv.ts`, синк `scripts/sync-wb-reviews.ts` (токен `/etc/ohana/wb.conf`, cron вс 05:30), `/store/ohana/wb`; на витрине звёзды в плитке, рейтинг под названием, вкладка «Отзывы».
+- **Быстрый заказ** `/bystryy-zakaz` (матрица размеров по моделям, `bizcalc-search` + `addToCartBulk`). **Прайс Excel с фото**: `scripts/build-price-xlsx.ts` → `/srv/ohana/shared/uploads/price/ohana-price.xlsx` (ночью; ссылка `PRICE_LIST_URL` в футере/кабинете/быстром заказе; exceljs ставить из корня воркспейса: `pnpm add exceljs --filter ./apps/backend` — в apps/backend лежит `.npmrc node-linker=hoisted`, установка оттуда ломает раскладку и дублирует core-flows).
+- **Заказать звонок** (топ-бар): `POST /store/ohana/callback` → лид Битрикс24 (crm.lead.add) + `/srv/ohana/logs/callbacks.tsv`. **Подсказка при входе**: `POST /store/ohana/login-hint` (нет аккаунта / неверный пароль). **Счёт покупателю**: `/ru/account/orders/details/:id/invoice` → `/store/ohana/orders/:id/invoice` (только свой заказ). **Вес заказа** в корзине. Меню кабинета — блок «Инструменты». Цены из 1С округляются вверх до рубля.
+- Ночной конвейер `/srv/ohana/bin/cml-nightly.sh`: rsync → resize → import → prices → stock → shared images → archive → alternatives → price xlsx.

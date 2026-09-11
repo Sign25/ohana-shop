@@ -1,7 +1,7 @@
 import { listCategoryTree } from "@/lib/data/categories"
 import LocalizedClientLink from "@/modules/common/components/localized-client-link"
 import Image from "next/image"
-import { MARKETPLACES } from "@/lib/util/marketplaces"
+import { MARKETPLACES, PRICE_LIST_URL } from "@/lib/util/marketplaces"
 
 /** Служебные страницы пока живут на старом сайте — ссылки временные, до переноса разделов. */
 const BUYERS = [
@@ -14,6 +14,8 @@ const BUYERS = [
   { label: "Подбор размера", href: "/podbor-razmera" },
   { label: "Бизнес с Оханой", href: "/biznes-s-ohanoy" },
   { label: "Совместные покупки", href: "/sovmestnye-pokupki" },
+  { label: "Быстрый заказ", href: "/bystryy-zakaz" },
+  { label: "Прайс-лист (Excel)", href: PRICE_LIST_URL },
 ]
 const COMPANY = [
   { label: "О компании", href: "/p/about" },

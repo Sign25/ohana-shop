@@ -21,6 +21,11 @@ const OrderDetails = ({ order }: OrderDetailsProps) => {
         {o.fulfillment_status && <div className="flex justify-between"><Text>Отгрузка</Text><Text>{FUL[o.fulfillment_status] || o.fulfillment_status}</Text></div>}
         {o.metadata?.onec_number && <div className="flex justify-between"><Text>Номер в учёте</Text><Text>{o.metadata.onec_number}</Text></div>}
         <Text className="mt-2">Подтверждение и счёт отправим на <span className="font-semibold">{order.email}</span>.</Text>
+        {o.customer_id && (
+          <a href={`/ru/account/orders/details/${order.id}/invoice`} target="_blank" rel="noopener" className="mt-2 inline-flex w-fit items-center gap-1.5 rounded-pill border border-oh-line-2 bg-white px-4 py-2 text-[13px] font-medium text-oh-ink hover:border-oh-azure hover:text-oh-azure">
+            Скачать счёт на оплату
+          </a>
+        )}
       </div>
     </>
   )

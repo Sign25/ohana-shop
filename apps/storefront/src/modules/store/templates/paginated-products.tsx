@@ -3,6 +3,7 @@ import { getProductsById, listProducts } from "@/lib/data/products"
 import { getRegion } from "@/lib/data/regions"
 import { plural } from "@/lib/util/ohana"
 import ProductPreview from "@/modules/products/components/product-preview"
+import { getWbRatings } from "@/lib/data/wb"
 import CatalogFiltersBar from "@/modules/store/components/catalog-filters"
 import { Pagination } from "@/modules/store/components/pagination"
 import { SortOptions } from "@/modules/store/components/refinement-list/sort-products"
@@ -13,6 +14,7 @@ export const PRODUCT_LIMIT = 24
 
 const ORDER: Record<SortOptions, CatalogOrder> = {
   created_at: "new",
+  hits: "hits",
   title: "title",
   price_asc: "price_asc",
   price_desc: "price_desc",
@@ -71,6 +73,7 @@ export default async function PaginatedProducts({
     }
   }
 
+  const wb = await getWbRatings(products.map((p) => String((p.metadata as any)?.code || "")))
   const totalPages = Math.ceil(count / PRODUCT_LIMIT)
   const filtered = !!(filters && ((filters.size && filters.size.length) || filters.pmin || filters.pmax || filters.stock === "full" || filters.sale || filters.new))
 
@@ -92,7 +95,7 @@ export default async function PaginatedProducts({
         <ul className="grid w-full grid-cols-2 gap-3 small:grid-cols-3 medium:grid-cols-4" data-testid="products-list">
           {products.map((p) => (
             <li key={p.id}>
-              <ProductPreview product={p} region={region} />
+              <ProductPreview product={p} region={region} wb={wb[String((p.metadata as any)?.code || "")]} />
             </li>
           ))}
         </ul>

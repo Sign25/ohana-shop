@@ -1,5 +1,7 @@
-import { formatRub, plural, productSummary, saleMode } from "@/lib/util/ohana"
+import { formatRub, plural, productSummary, saleMode, variantSale } from "@/lib/util/ohana"
 import ProductBadges from "@/modules/products/components/product-badges"
+import WbRatingLine from "@/modules/products/components/wb-rating"
+import { HIT_MIN_REVIEWS, WbRating } from "@/lib/data/wb"
 import CardImage from "@/modules/products/components/card-image"
 import LocalizedClientLink from "@/modules/common/components/localized-client-link"
 import { HttpTypes } from "@medusajs/types"
@@ -11,16 +13,19 @@ import { clx } from "@medusajs/ui"
  */
 export default async function ProductPreview({
   product,
+  wb,
 }: {
   product: HttpTypes.StoreProduct
   isFeatured?: boolean
   region?: HttpTypes.StoreRegion
+  /** рейтинг Wildberries по артикулу (см. lib/data/wb.ts) */
+  wb?: WbRating | null
 }) {
   if (!product) return null
   const s = productSummary(product)
   const sm = saleMode(product)
   const piece = (x: number) => (sm.priceIsPerPack && sm.perUnit > 1 ? x / sm.perUnit : x)
-  const sale = (product.variants || []).map((v: any) => Number(v.metadata?.price_sale) || 0).filter((x) => x > 0)
+  const sale = (product.variants || []).map((v: any) => variantSale(v)).filter((x) => x > 0)
   const minSale = sale.length ? piece(Math.min(...sale)) : null
   const colorLabel = String((product.metadata as any)?.color_label || "").trim()
   const colorHint = colorLabel && !product.title.toLowerCase().includes(colorLabel.toLowerCase().split(/[ ,]/)[0].replace(/(ый|ая|ое|ые|ий|яя)$/, "")) ? colorLabel : ""
@@ -47,7 +52,7 @@ export default async function ProductPreview({
               Всё разобрали
             </span>
           )}
-          <ProductBadges product={product} />
+          <ProductBadges product={product} hit={!!wb && wb.count >= HIT_MIN_REVIEWS} />
         </div>
         <div className="flex flex-1 flex-col gap-1.5 p-3.5">
           {s.code && <div className="text-[12px] text-oh-muted">Арт. {s.code}</div>}
@@ -56,6 +61,7 @@ export default async function ProductPreview({
           </div>
           {/* цвет из 1С, если он не входит в название (в каталоге «Номенклатура 2026» одно название на несколько расцветок) */}
           {colorHint && <div className="-mt-1 text-[12px] text-oh-muted">{colorHint}</div>}
+          <WbRatingLine wb={wb} compact />
           <div className="mt-auto flex flex-col gap-0.5 pt-1">
             {s.minPrice !== null ? (
               <div className="text-[17px] font-semibold text-oh-ink" data-testid="price">

@@ -1,11 +1,12 @@
 import { listCategoryTree } from "@/lib/data/categories"
-import { listProducts } from "@/lib/data/products"
+import { searchCatalog } from "@/lib/data/catalog"
+import { getProductsById } from "@/lib/data/products"
 import { getRegion } from "@/lib/data/regions"
 import { audienceLabel } from "@/lib/util/ohana"
 import LocalizedClientLink from "@/modules/common/components/localized-client-link"
 import ProductPreview from "@/modules/products/components/product-preview"
+import { getWbRatings } from "@/lib/data/wb"
 
-const FIELDS = "*variants.calculated_price,+variants.inventory_quantity,+variants.metadata,+metadata"
 
 /**
  * Секции главной как на ohanaopt.ru: по каждому разделу-аудитории ряд из 4 товаров
@@ -19,17 +20,15 @@ export default async function FeaturedProducts({ countryCode }: { countryCode: s
   const sections = await Promise.all(
     roots.map(async (c) => {
       const ids = [c.id, ...categories.filter((k) => k.parent_category_id === c.id).map((k) => k.id)]
-      const {
-        response: { products },
-      } = await listProducts({
-        pageParam: 1,
-        queryParams: { limit: 4, category_id: ids, order: "-created_at", fields: FIELDS } as any,
-        countryCode,
-      })
-      return { category: c, products }
+      // наш каталожный маршрут: только с фото и в наличии, новые первыми
+      const found = await searchCatalog({ categoryIds: ids, filters: { stock: "any" }, order: "new", limit: 4, offset: 0 }).catch(() => ({ ids: [] as string[] }))
+      const got = found.ids.length ? await getProductsById({ ids: found.ids, regionId: region.id }) : []
+      const byId = new Map(got.map((p) => [p.id, p]))
+      return { category: c, products: found.ids.map((id) => byId.get(id)).filter(Boolean) as typeof got }
     })
   )
 
+  const wb = await getWbRatings(sections.flatMap((s) => s.products.map((p) => String((p.metadata as any)?.code || ""))))
   return (
     <div className="content-container flex flex-col gap-10 py-6">
       {sections
@@ -47,7 +46,7 @@ export default async function FeaturedProducts({ countryCode }: { countryCode: s
             <ul className="grid grid-cols-2 gap-3 small:grid-cols-4">
               {products.map((p) => (
                 <li key={p.id}>
-                  <ProductPreview product={p} region={region} />
+                  <ProductPreview product={p} region={region} wb={wb[String((p.metadata as any)?.code || "")]} />
                 </li>
               ))}
             </ul>

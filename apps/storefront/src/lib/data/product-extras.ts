@@ -27,3 +27,10 @@ export const submitDemand = async (productId: string, email: string): Promise<{ 
     return { ok: false, message: e?.message || "Не получилось записать заявку — попробуйте ещё раз." }
   }
 }
+
+/** «Заказать звонок» → лид в Битрикс24 (маршрут /store/ohana/callback) */
+export const requestCallback = async (data: { name: string; phone: string; comment?: string; page?: string }): Promise<{ ok: boolean; message: string }> => {
+  try {
+    return await sdk.client.fetch<{ ok: boolean; message: string }>(`/store/ohana/callback`, { method: "POST", body: data })
+  } catch (e: any) { return { ok: false, message: e?.message || "Не получилось отправить — позвоните нам: 8 (991) 430-17-30." } }
+}

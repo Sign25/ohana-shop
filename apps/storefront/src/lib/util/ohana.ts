@@ -56,11 +56,28 @@ type VariantMeta = {
   color?: string | null
 }
 
+/**
+ * Оптовая (базовая) цена варианта. Акция из 1С лежит в прайс-листе типа sale и применяется Medusa сама:
+ * calculated_amount = акция, original_amount = опт. Поэтому опт — это original_amount.
+ */
+export const variantOpt = (v: any): number => {
+  const cp = v?.calculated_price
+  return Number(cp?.original_amount) || Number(cp?.calculated_amount) || 0
+}
+/** Акционная цена варианта (0 — акции нет или она не ниже опта) */
+export const variantSale = (v: any): number => {
+  const cp = v?.calculated_price
+  const opt = variantOpt(v)
+  const fromList = cp?.calculated_price?.price_list_type === "sale" ? Number(cp?.calculated_amount) || 0 : 0
+  const sale = fromList || Number(v?.metadata?.price_sale) || 0
+  return sale > 0 && (!opt || sale < opt) ? sale : 0
+}
+
 /** Сводка по товару для карточки и страницы: цены, остаток, упаковка */
 export const productSummary = (product: HttpTypes.StoreProduct) => {
   const variants = (product.variants || []) as any[]
   const prices = variants
-    .map((v) => v.calculated_price?.calculated_amount)
+    .map((v) => variantOpt(v))
     .filter((p): p is number => typeof p === "number" && p > 0)
   const krupny = variants
     .map((v) => (v.metadata as VariantMeta)?.price_krupny)
@@ -147,7 +164,7 @@ export const productBadges = (product: HttpTypes.StoreProduct): { key: string; l
   const out: { key: string; label: string; tone: "primary" | "azure" | "mint" | "gold" | "graphite" }[] = []
   const m = (product.metadata || {}) as Record<string, any>
   const variants = (product.variants || []) as any[]
-  if (variants.some((v) => Number(v.metadata?.price_sale) > 0)) out.push({ key: "promo", label: "Акция", tone: "primary" })
+  if (variants.some((v) => variantSale(v) > 0)) out.push({ key: "promo", label: "Акция", tone: "primary" })
   const created = product.created_at ? Date.parse(String(product.created_at)) : 0
   if (created >= NEW_FROM && Date.now() - created < NEW_DAYS * 86400000 && !m.lineika) out.push({ key: "new", label: "Новинка", tone: "mint" })
   const cats = (product.categories || []) as any[]

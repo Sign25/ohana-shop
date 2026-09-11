@@ -20,6 +20,7 @@ const Hero = async () => {
   const chips = [
     { label: "Новинки", href: "/store?new=1" },
     { label: "Акции", href: "/store?sale=1" },
+    { label: "Хиты продаж", href: "/store?sortBy=hits" },
     ...showcases.map((c) => ({ label: c.name, href: `/categories/${c.handle}` })),
   ]
 

@@ -14,6 +14,14 @@ const CartTotals: React.FC = () => {
   const qty = cart.items?.reduce((a: number, i: any) => a + i.quantity, 0) || 0
   const tier = cart.items?.some((i: any) => i.metadata?.tier === "krupny") ? "крупный опт" : "опт"
   const money = (a?: number | null) => convertToLocale({ amount: a ?? 0, currency_code })
+  // вес заказа: вес варианта в граммах; у комплекта/упаковки 1С даёт вес всего вложения (≥1 кг) — делим на количество в упаковке
+  const grams = cart.items?.reduce((a: number, i: any) => {
+    const v = i.variant || {}, pm = i.product?.metadata || {}, vm = v.metadata || {}
+    const per = Number(pm.set_qty) || Number(vm.pack_qty) || 1
+    let w = Number(v.weight) || Number(i.product?.weight) || 0
+    if (w >= 1000 && vm.pack_unit !== "Y" && per > 1) w = w / per
+    return a + w * (vm.pack_unit === "Y" ? per : 1) * i.quantity
+  }, 0) || 0
 
   return (
     <div className="flex flex-col gap-y-1.5 text-[13px] text-oh-graphite">
@@ -25,6 +33,12 @@ const CartTotals: React.FC = () => {
         <div className="flex justify-between">
           <span>Скидка</span>
           <span className="text-oh-azure" data-testid="cart-discount">− {money(discount_total)}</span>
+        </div>
+      )}
+      {grams > 0 && (
+        <div className="flex justify-between">
+          <span>Вес заказа</span>
+          <span data-testid="cart-weight">{grams >= 1000 ? `≈ ${(grams / 1000).toFixed(grams >= 10000 ? 0 : 1)} кг` : `${Math.round(grams)} г`}</span>
         </div>
       )}
       <div className="flex justify-between gap-4">

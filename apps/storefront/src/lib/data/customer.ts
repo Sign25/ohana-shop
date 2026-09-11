@@ -167,6 +167,11 @@ export async function login(_currentState: unknown, formData: FormData) {
         revalidateTag(cartsCacheTag)
       })
   } catch (error: any) {
+    // подсказка, как на старом сайте: различаем «нет аккаунта» и «неверный пароль»
+    try {
+      const { exists } = await sdk.client.fetch<{ exists: boolean }>(`/store/ohana/login-hint`, { method: "POST", body: { email } })
+      return exists ? "wrong_password" : "no_account"
+    } catch {}
     return error.toString()
   }
 

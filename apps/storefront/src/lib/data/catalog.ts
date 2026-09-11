@@ -11,7 +11,7 @@ export type CatalogFilters = {
   sale?: boolean
   new?: boolean
 }
-export type CatalogOrder = "new" | "price_asc" | "price_desc" | "title"
+export type CatalogOrder = "new" | "hits" | "price_asc" | "price_desc" | "title"
 export type CatalogFacets = {
   sizes: { key: string; count: number }[]
   price_min: number

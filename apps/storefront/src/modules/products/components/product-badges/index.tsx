@@ -7,8 +7,8 @@ const TONE: Record<string, string> = {
 }
 
 /** Бейджи поверх фото: «Акция» отдельно слева вверху, остальные — справа внизу (как на старом сайте) */
-const ProductBadges = ({ product, size = "sm" }: { product: HttpTypes.StoreProduct; size?: "sm" | "lg" }) => {
-  const badges = productBadges(product)
+const ProductBadges = ({ product, size = "sm", hit }: { product: HttpTypes.StoreProduct; size?: "sm" | "lg"; hit?: boolean }) => {
+  const badges = [...(hit ? [{ key: "hit", label: "Хит продаж", tone: "gold" as const }] : []), ...productBadges(product)]
   if (!badges.length) return null
   const promo = badges.find((b) => b.key === "promo"), rest = badges.filter((b) => b.key !== "promo")
   const cls = (tone: string) => clx("rounded-pill font-medium shadow-sm", TONE[tone], size === "lg" ? "px-3 py-1 text-[13px]" : "px-2 py-0.5 text-[11px]")

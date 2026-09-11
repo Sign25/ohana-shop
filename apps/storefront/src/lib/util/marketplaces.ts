@@ -5,7 +5,11 @@ export const MARKETPLACES = [
   { key: "wb", name: "Wildberries", href: "https://www.wildberries.ru/seller/435177", color: "#CB11AB", note: "продавец 435177" },
 ]
 export const BUSINESS_TOOLS = [
+  { label: "Быстрый заказ", href: "/bystryy-zakaz", text: "Матрица размеров по артикулам — заказ за минуту" },
   { label: "Подбор размера", href: "/podbor-razmera", text: "Размер по меркам — взрослые и дети" },
   { label: "Бизнес с Оханой", href: "/biznes-s-ohanoy", text: "Считаем маржу и окупаемость закупки" },
   { label: "Совместные покупки", href: "/sovmestnye-pokupki", text: "Калькулятор для организаторов СП" },
 ]
+
+/** Прайс-лист Excel собирается ночью на бэкенде и лежит в /uploads (домен API) */
+export const PRICE_LIST_URL = `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "https://api.ohanaopt.ru"}/uploads/price/ohana-price.xlsx`

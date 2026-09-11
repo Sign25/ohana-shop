@@ -1,4 +1,4 @@
-import { formatRub, KRUPNY_THRESHOLD, OPT_THRESHOLD, productSummary, saleMode } from "@/lib/util/ohana"
+import { formatRub, KRUPNY_THRESHOLD, OPT_THRESHOLD, productSummary, saleMode, variantSale } from "@/lib/util/ohana"
 import { HttpTypes } from "@medusajs/types"
 
 /**
@@ -13,7 +13,7 @@ export default function ProductPrice({ product }: { product: HttpTypes.StoreProd
   const piece = (x: number) => (sm.priceIsPerPack && per > 1 ? x / per : x)
   const minOpt = piece(s.minPrice), maxOpt = piece(s.maxPrice ?? s.minPrice)
   const same = minOpt === maxOpt
-  const sale = (product.variants || []).map((v: any) => Number(v.metadata?.price_sale) || 0).filter((x) => x > 0)
+  const sale = (product.variants || []).map((v: any) => variantSale(v)).filter((x) => x > 0)
   const minSale = sale.length ? piece(Math.min(...sale)) : null
   const krupny = s.minKrupny !== null ? piece(s.minKrupny) : null
   const unitNote = per > 1 ? (sm.mode === "set" ? `комплект ${per} шт` : `упаковка ${per} шт`) : ""

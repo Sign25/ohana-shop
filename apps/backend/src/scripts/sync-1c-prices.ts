@@ -38,7 +38,7 @@ export default async function syncPrices({ container, args }: ExecArgs) {
     const nom = String(r["Ном__id"] || "").toLowerCase()
     if (!nom) continue
     const kind = String(r["Вид"] || "").toLowerCase()
-    const val = Number(r["Цена"]) || 0
+    const val = Math.ceil(Number(r["Цена"]) || 0) // цены на сайте — целые рубли, вверх (как на старом сайте)
     const p = prices.get(nom) || {}
     if (kind === PT_OPT) p.opt = val
     else if (kind === PT_KRUPNY) p.krupny = val

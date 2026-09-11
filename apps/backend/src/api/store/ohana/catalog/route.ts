@@ -23,7 +23,7 @@ const sizeSort = (a: string, b: string) => {
 }
 const list = (v: unknown): string[] => (Array.isArray(v) ? v : typeof v === "string" && v ? v.split(",") : []).map((s) => String(s).trim()).filter(Boolean)
 
-type Row = { id: string; title: string; created_at: Date; size: string | null; price: number | null; stock: number | null; sale: number | null }
+type Row = { id: string; title: string; created_at: Date; size: string | null; price: number | null; stock: number | null; sale: number | null; hits: number | null }
 
 /** «Новинка» — как на витрине (lib/util/ohana.ts): после запуска нового сайта и не старше 21 дня */
 const NEW_FROM = Date.parse("2026-09-12T00:00:00+03:00"), NEW_DAYS = 21
@@ -45,7 +45,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const pmin = Number(qp.pmin) || 0, pmax = Number(qp.pmax) || 0
   const stock = qp.stock === "full" ? "full" : qp.stock === "any" ? "any" : ""
   const onlySale = qp.sale === "1", onlyNew = qp.new === "1"
-  const order = ["new", "price_asc", "price_desc", "title"].includes(qp.order) ? qp.order : "new"
+  const order = ["new", "hits", "price_asc", "price_desc", "title"].includes(qp.order) ? qp.order : "new"
   const limit = Math.min(Math.max(Number(qp.limit) || 24, 1), 100), offset = Math.max(Number(qp.offset) || 0, 0)
 
   const where: string[] = ["p.deleted_at is null", "p.status = 'published'", "p.thumbnail is not null"], binds: any[] = []
@@ -54,6 +54,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
 
   const sql = `
     select p.id, p.title, p.created_at, v.metadata->>'size' as size, min(pr.amount)::float as price,
+           coalesce((select w.reviews_count from ohana_wb_rating w where w.product_code = p.metadata->>'code' and w.deleted_at is null limit 1), 0)::int as hits,
            nullif(v.metadata->>'price_sale', '')::float as sale,
            coalesce(sum(il.stocked_quantity - il.reserved_quantity), 0)::float as stock
     from product p
@@ -66,12 +67,12 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     group by p.id, v.id`
   const { rows } = (await pg.raw(sql, binds)) as { rows: Row[] }
 
-  type P = { id: string; title: string; created: number; minPrice: number; sizesIn: Set<string>; sizesAll: Set<string>; anyStock: boolean; full: boolean; n: number; sale: boolean }
+  type P = { id: string; title: string; created: number; minPrice: number; sizesIn: Set<string>; sizesAll: Set<string>; anyStock: boolean; full: boolean; n: number; sale: boolean; hits: number }
   const byId = new Map<string, P>()
   for (const r of rows) {
     let p = byId.get(r.id)
-    if (!p) { p = { id: r.id, title: r.title, created: new Date(r.created_at).getTime(), minPrice: Infinity, sizesIn: new Set(), sizesAll: new Set(), anyStock: false, full: true, n: 0, sale: false }; byId.set(r.id, p) }
-    if ((r.sale || 0) > 0) p.sale = true
+    if (!p) { p = { id: r.id, title: r.title, created: new Date(r.created_at).getTime(), minPrice: Infinity, sizesIn: new Set(), sizesAll: new Set(), anyStock: false, full: true, n: 0, sale: false, hits: Number(r.hits) || 0 }; byId.set(r.id, p) }
+    if ((r.sale || 0) > 0 && (!r.price || (r.sale as number) < r.price)) p.sale = true
     const k = sizeKey(r.size || ""), inStock = (r.stock || 0) > 0
     p.n++
     if (k) { p.sizesAll.add(k); if (inStock) p.sizesIn.add(k) }
@@ -106,6 +107,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const price = (p: P) => (isFinite(p.minPrice) ? p.minPrice : 1e12) // без цены — в конец
   const cmp: Record<string, (a: P, b: P) => number> = {
     new: (a, b) => b.created - a.created,
+    hits: (a, b) => (b.hits - a.hits) || (b.created - a.created), // по числу отзывов на Wildberries
     price_asc: (a, b) => (price(a) - price(b)) || (b.created - a.created),
     price_desc: (a, b) => (price(b) - price(a)) || (b.created - a.created),
     title: (a, b) => a.title.localeCompare(b.title, "ru"),

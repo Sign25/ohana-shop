@@ -1,14 +1,14 @@
 "use client"
 
-import { addToCartBulk, retrieveCartSummary } from "@/lib/data/cart"
+import { retrieveCartSummary } from "@/lib/data/cart"
 import { addToCartEventBus } from "@/lib/data/cart-event-bus"
 import { getProductPrice } from "@/lib/util/get-product-price"
-import { formatRub, KRUPNY_THRESHOLD, OPT_THRESHOLD, plural, saleMode } from "@/lib/util/ohana"
+import { formatRub, KRUPNY_THRESHOLD, OPT_THRESHOLD, plural, saleMode, variantOpt, variantSale } from "@/lib/util/ohana"
 import LocalizedClientLink from "@/modules/common/components/localized-client-link"
 import ProductDemand from "@/modules/products/components/product-demand"
 import { HttpTypes } from "@medusajs/types"
 import { clx, Table } from "@medusajs/ui"
-import { useParams, useRouter } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
 import BulkTableQuantity from "../bulk-table-quantity"
 
@@ -22,7 +22,6 @@ import BulkTableQuantity from "../bulk-table-quantity"
  */
 const ProductVariantsTable = ({ product, region }: { product: HttpTypes.StoreProduct; region: HttpTypes.StoreRegion }) => {
   const router = useRouter()
-  const { countryCode } = useParams() as { countryCode: string }
   const sm = saleMode(product)
   const unitMode = sm.mode !== "pieces" // счётчик в комплектах/упаковках
   const [units, setUnits] = useState<Map<string, number>>(new Map()) // variantId → единиц заказа (шт / компл. / упак.)
@@ -44,11 +43,11 @@ const ProductVariantsTable = ({ product, region }: { product: HttpTypes.StorePro
   const piecesOf = (q: number) => (unitMode ? q * per : q)
 
   // цены за штуку (у 'Y' цена в БД — за упаковку)
-  const basePrice = (v: any) => Number(getProductPrice({ product, variantId: v.id }).variantPrice?.calculated_price_number) || 0
+  const basePrice = (v: any) => variantOpt(v) || Number(getProductPrice({ product, variantId: v.id }).variantPrice?.calculated_price_number) || 0
   const perPiece = (x: number) => (sm.priceIsPerPack && per > 1 ? x / per : x)
   const optPiece = (v: any) => perPiece(basePrice(v))
   const krupnyPiece = (v: any) => perPiece(Number(v.metadata?.price_krupny) || 0)
-  const salePiece = (v: any) => perPiece(Number(v.metadata?.price_sale) || 0)
+  const salePiece = (v: any) => perPiece(variantSale(v))
   const gramsPiece = (v: any) => { const w = Number(v.weight) || Number(product.weight) || 0; return w >= 1000 && sm.mode !== "packY" && per > 1 ? w / per : w }
 
   const sel = Array.from(units.entries()).map(([id, q]) => ({ v: variants.find((x) => x.id === id)!, q })).filter((x) => x.v && x.q > 0)
@@ -88,8 +87,9 @@ const ProductVariantsTable = ({ product, region }: { product: HttpTypes.StorePro
     if (!sel.length) return
     setIsAdding(true)
     try {
-      await addToCartBulk({ lineItems: sel.map((x) => ({ variant_id: x.v.id, quantity: cartQty(x.q) })), countryCode })
+      // CartProvider (layout) слушает шину и сам шлёт addToCartBulk с оптимистичным обновлением корзины
       addToCartEventBus.emitCartAdd({ lineItems: sel.map((x) => ({ productVariant: { ...(x.v as any), product }, quantity: cartQty(x.q) })), regionId: region.id })
+      await new Promise((r) => setTimeout(r, 300))
       setAdded(`Добавили в корзину: ${pieces} шт на ${formatRub(totalSum)}`)
       setCart((c) => ({ subtotal: (c?.subtotal ?? 0) + optSum, count: (c?.count ?? 0) + pieces }))
       fill(0)

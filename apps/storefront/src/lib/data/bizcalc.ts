@@ -12,6 +12,10 @@ export type CalcProduct = {
   rrc: number
   weight: number
   step: number
+  /** «Номенклатура 2026»: продажа комплектом (полной линейкой) по per штук; pack — упаковка (продукты) */
+  lineika?: boolean
+  pack?: boolean
+  per?: number
   stock: number
   variants: { id: string; size: string; stock: number; step: number }[]
 }

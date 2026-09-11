@@ -7,7 +7,7 @@ import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
  * Один SQL, как в /store/ohana/catalog.
  */
 type Row = {
-  id: string; handle: string; title: string; code: string | null; thumbnail: string | null; pweight: number | null
+  id: string; handle: string; title: string; code: string | null; thumbnail: string | null; pweight: number | null; pmeta: any; vmeta: any
   vid: string; size: string | null; vweight: number | null; price: number | null; krupny: string | null; rrc: string | null; step: string | null; stock: number | null
 }
 
@@ -16,7 +16,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const q = String((req.query as any).q || "").trim()
   if (q.length < 2) return res.json([])
   const sql = `
-    select p.id, p.handle, p.title, p.metadata->>'code' as code, p.thumbnail, p.weight::float as pweight,
+    select p.id, p.handle, p.title, p.metadata->>'code' as code, p.thumbnail, p.weight::float as pweight, p.metadata as pmeta, v.metadata as vmeta,
            v.id as vid, v.metadata->>'size' as size, v.weight::float as vweight,
            min(pr.amount)::float as price, v.metadata->>'price_krupny' as krupny, v.metadata->>'rrc' as rrc, v.metadata->>'qty_step' as step,
            coalesce(sum(il.stocked_quantity - il.reserved_quantity), 0)::float as stock
@@ -32,12 +32,12 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const byId = new Map<string, any>()
   for (const r of rows) {
     let p = byId.get(r.id)
-    if (!p) { p = { id: r.id, handle: r.handle, name: r.title, code: r.code || "", img: r.thumbnail, opt: Infinity, krupny: Infinity, rrc: 0, weight: (r.pweight || 0) / 1000, step: 1, stock: 0, variants: [] as any[] }; byId.set(r.id, p) }
+    if (!p) { p = { id: r.id, handle: r.handle, name: r.title, code: r.code || "", img: r.thumbnail, opt: Infinity, krupny: Infinity, rrc: 0, weight: (r.pweight || 0) / 1000, step: 1, stock: 0, lineika: !!r.pmeta?.lineika, pack: !!r.pmeta?.pack, per: Number(r.pmeta?.set_qty) || Number(r.vmeta?.pack_qty) || 0, variants: [] as any[] }; byId.set(r.id, p) }
     const stock = r.stock || 0, step = Math.max(1, Number(r.step) || 1)
     if (r.price && r.price < p.opt) p.opt = r.price
     const k = Number(r.krupny) || r.price || 0; if (k && k < p.krupny) p.krupny = k
     if (Number(r.rrc) > p.rrc) p.rrc = Number(r.rrc)
-    if (!p.weight && r.vweight) p.weight = r.vweight / 1000
+    if (!p.weight && r.vweight) { const per = Number(r.vmeta?.pack_qty) || 1; p.weight = (r.vweight >= 1000 && per > 1 && r.vmeta?.pack_unit !== "Y" ? r.vweight / per : r.vweight) / 1000 } // вес комплекта из 1С → за штуку
     p.step = step; p.stock += stock
     if (stock > 0) p.variants.push({ id: r.vid, size: r.size || "", stock, step })
   }

@@ -6,7 +6,7 @@ const Marketplaces = () => (
   <div className="content-container flex flex-col gap-8 py-6">
     <section>
       <h2 className="oh-h mb-4 text-[28px]">Инструменты для бизнеса</h2>
-      <ul className="grid grid-cols-1 gap-3 small:grid-cols-3">
+      <ul className="grid grid-cols-1 gap-3 small:grid-cols-4">
         {BUSINESS_TOOLS.map((t) => (
           <li key={t.href}>
             <LocalizedClientLink href={t.href} className="oh-card flex h-full flex-col gap-1 p-4 transition-colors hover:border-oh-azure">
