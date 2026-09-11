@@ -1,7 +1,7 @@
 import { retrieveCart } from "@/lib/data/cart"
 import { listCategoryTree } from "@/lib/data/categories"
 import { retrieveCustomer } from "@/lib/data/customer"
-import { audienceLabel, visibleShowcases } from "@/lib/util/ohana"
+import { audienceLabel } from "@/lib/util/ohana"
 import AccountButton from "@/modules/account/components/account-button"
 import CartButton from "@/modules/cart/components/cart-button"
 import LocalizedClientLink from "@/modules/common/components/localized-client-link"
@@ -29,7 +29,6 @@ export async function NavigationHeader() {
   ])
   const isShowcase = (c: any) => c.metadata?.kind === "showcase"
   const audiences = categories.filter((c) => !c.parent_category_id && !isShowcase(c))
-  const showcases = visibleShowcases(categories)
 
   return (
     <div className="sticky top-0 inset-x-0 z-50 bg-white border-b border-oh-line">
@@ -97,14 +96,6 @@ export async function NavigationHeader() {
               {audienceLabel(c.name)}
             </LocalizedClientLink>
           ))}
-          {showcases.slice(0, 2).map((c) => (
-            <LocalizedClientLink key={c.id} href={`/categories/${c.handle}`} className="text-oh-primary hover:text-oh-primary-hover">
-              {c.name}
-            </LocalizedClientLink>
-          ))}
-          <a href="https://ohana.market/" className="ml-auto normal-case tracking-normal text-oh-muted hover:text-oh-azure">
-            Розница ↗
-          </a>
         </nav>
       </header>
     </div>

@@ -9,6 +9,7 @@
  *
  *   npx medusa exec ./src/scripts/import-commerceml.ts [dry] [file=/path/import.xml] [limit=N]
  */
+import { TAG_NAMES, isYes } from "../lib/tags"
 import { ExecArgs } from "@medusajs/framework/types"
 import { ContainerRegistrationKeys, ProductStatus } from "@medusajs/framework/utils"
 import {
@@ -222,7 +223,9 @@ export default async function importCml({ container, args }: ExecArgs) {
       processed++
       const f = main.props
       const packQty = num(f["Количество товаров в упаковке"]) || null
+      const tags = TAG_NAMES.filter((t) => isYes(it.props[t]))
       const specMeta = {
+        tags,
         code: main.article || null, guid: nom, model: f["Модель"] || null, size_range: f["Размерная линейка"] || null,
         manufacturer: f["Изготовитель"] || null, composition: f["Состав"] || null, color_label: f["Цвет"] || null,
         cert_doc: f["Документ соответствия"] || null, cert_issued: f["Дата выдачи"] || null, cert_until: f["Дата окончания действия"] || null,

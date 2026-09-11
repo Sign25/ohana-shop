@@ -20,6 +20,7 @@ type Props = {
     sale?: string
     new?: string
     hits?: string
+    tag?: string
   }>
 }
 

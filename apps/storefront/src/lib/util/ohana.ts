@@ -179,13 +179,15 @@ export const productBadges = (product: HttpTypes.StoreProduct, wb?: { rating: nu
   const variants = (product.variants || []) as any[]
   const cats = (product.categories || []) as any[]
   const inCat = (handle: string) => cats.some((c) => c.handle === handle)
+  const tags: string[] = Array.isArray(m.tags) ? m.tags : []
+  const tag = (t: string) => tags.includes(t)
   if (variants.some((v) => variantSale(v) > 0)) out.push({ key: "promo", label: "Акция", color: "#F4503A" })
-  if (isHit(product, wb)) out.push({ key: "hit", label: "Хит", color: "#E69C4E" })
+  if (isHit(product, wb) || tag("Хит продаж")) out.push({ key: "hit", label: "Хит", color: "#E69C4E" })
   const created = productCreatedAt(product)
-  if (created >= NEW_FROM && Date.now() - created < NEW_DAYS * 86400000 && !m.lineika) out.push({ key: "new", label: "Новинка", color: "#16a34a" })
+  if (((created >= NEW_FROM && Date.now() - created < NEW_DAYS * 86400000) || tag("Новинки") || tag("Поступления")) && !m.lineika) out.push({ key: "new", label: "Новинка", color: "#16a34a" })
   if (inCat("big-size")) out.push({ key: "big", label: "Big size", color: "#246075" })
-  if (inCat("leto-2026")) out.push({ key: "summer", label: "Лето", color: "#0ea5e9" })
-  if (inCat("shkola")) out.push({ key: "school", label: "Школа", color: "#4c6ef5" })
+  if (inCat("leto-2026") || tag("Лето")) out.push({ key: "summer", label: "Лето", color: "#0ea5e9" })
+  if (inCat("shkola") || tag("Школа")) out.push({ key: "school", label: "Школа", color: "#4c6ef5" })
   if (m.pack) out.push({ key: "pack", label: "Упаковка", color: "#5FA88C" })
   else if (m.lineika) out.push({ key: "set", label: "Комплект", color: "#246075" })
   return out

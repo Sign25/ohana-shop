@@ -79,7 +79,7 @@ export default async function PaginatedProducts({
 
   const wb = await getWbRatings(products.map((p) => String((p.metadata as any)?.code || "")))
   const totalPages = Math.ceil(count / PRODUCT_LIMIT)
-  const filtered = !!(filters && ((filters.size && filters.size.length) || filters.pmin || filters.pmax || filters.stock === "full" || filters.sale || filters.new || filters.hits))
+  const filtered = !!(filters && ((filters.size && filters.size.length) || filters.pmin || filters.pmax || filters.stock === "full" || filters.sale || filters.new || filters.hits || filters.tag))
 
   return (
     <>

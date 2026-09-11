@@ -74,7 +74,8 @@ const MobileMenu = ({ categories }: { categories: Cat[] }) => {
                 <div className="px-4 py-3">
                   <div className="mb-2 text-[13px] font-medium text-oh-graphite">Подборки</div>
                   <div className="flex flex-wrap gap-1.5">
-                    <LocalizedClientLink href="/store" className="oh-chip !py-1 !text-[12px]">Новинки</LocalizedClientLink>
+                    <LocalizedClientLink href="/store?new=1" className="oh-chip !py-1 !text-[12px]">Новинки</LocalizedClientLink>
+                    <LocalizedClientLink href="/store?hits=1" className="oh-chip !py-1 !text-[12px]">Хиты продаж</LocalizedClientLink>
                     {showcases.map((c) => (
                       <LocalizedClientLink key={c.id} href={`/categories/${c.handle}`} className="oh-chip !py-1 !text-[12px]">{c.name}</LocalizedClientLink>
                     ))}
@@ -87,7 +88,6 @@ const MobileMenu = ({ categories }: { categories: Cat[] }) => {
                 <LocalizedClientLink href="/biznes-s-ohanoy" className="block py-1.5 text-oh-graphite">Бизнес с Оханой</LocalizedClientLink>
                 <LocalizedClientLink href="/podbor-razmera" className="block py-1.5 text-oh-graphite">Подбор размера</LocalizedClientLink>
                 <LocalizedClientLink href="/sovmestnye-pokupki" className="block py-1.5 text-oh-graphite">Совместные покупки</LocalizedClientLink>
-                <a href="https://ohana.market/" className="block py-1.5 text-oh-muted">Розничный магазин ↗</a>
               </div>
             </div>
             <div className="border-t border-oh-line px-4 py-3 text-[13px]">

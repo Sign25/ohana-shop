@@ -19,14 +19,14 @@ const Marketplaces = () => (
     </section>
     <section>
       <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="oh-h text-[28px]">Мы на маркетплейсах</h2>
+        <h2 className="oh-h text-[28px]">Розница и маркетплейсы</h2>
         <span className="text-[13px] text-oh-graphite">Розница и проверка спроса — там; опт по ценам производителя — здесь</span>
       </div>
-      <ul className="grid grid-cols-1 gap-3 small:grid-cols-3">
+      <ul className="grid grid-cols-1 gap-3 small:grid-cols-4">
         {MARKETPLACES.map((m) => (
           <li key={m.key}>
             <a href={m.href} target="_blank" rel="noopener nofollow" className="oh-card flex items-center gap-4 p-4 transition-colors hover:border-oh-azure">
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-[20px] font-bold text-white" style={{ background: m.color }}>{m.name[0]}</span>
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-[20px] font-bold text-white" style={{ background: m.color }}>{m.key === "retail" ? "O" : m.name[0]}</span>
               <span className="flex flex-col">
                 <span className="text-[16px] font-semibold text-oh-ink">{m.name}</span>
                 <span className="text-[12.5px] text-oh-graphite">{m.note}</span>

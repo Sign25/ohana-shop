@@ -11,6 +11,8 @@ export type CatalogFilters = {
   sale?: boolean
   new?: boolean
   hits?: boolean
+  /** хэштег из 1С (metadata.tags) */
+  tag?: string
 }
 export type CatalogOrder = "new" | "hits" | "position" | "price_asc" | "price_desc" | "title"
 export type CatalogFacets = {
@@ -22,6 +24,7 @@ export type CatalogFacets = {
   sale: number
   new: number
   hits: number
+  tags: Record<string, number>
 }
 
 /** Поиск по каталогу с фильтрами (наш маршрут /store/ohana/catalog): id товаров в нужном порядке + фасеты */
@@ -47,6 +50,7 @@ export const searchCatalog = async (params: {
   if (f.sale) query.sale = 1
   if (f.new) query.new = 1
   if (f.hits) query.hits = 1
+  if (f.tag) query.tag = f.tag
   return sdk.client.fetch<{ ids: string[]; count: number; facets: CatalogFacets }>(`/store/ohana/catalog`, {
     method: "GET",
     query,
@@ -66,5 +70,14 @@ export const parseCatalogFilters = async (sp: Record<string, string | string[] |
     sale: one(sp.sale) === "1",
     new: one(sp.new) === "1",
     hits: one(sp.hits) === "1",
+    tag: one(sp.tag).trim(),
   }
+}
+
+/** Хэштеги витрины из тегов 1С — только те, у которых есть товары в наличии (маршрут /store/ohana/tags) */
+export const listTags = async (): Promise<{ tag: string; count: number }[]> => {
+  try {
+    const { tags } = await sdk.client.fetch<{ tags: { tag: string; count: number }[] }>(`/store/ohana/tags`, { method: "GET", next: { revalidate: 300 } })
+    return tags
+  } catch { return [] }
 }

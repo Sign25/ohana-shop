@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 }
 
 type Params = {
-  searchParams: Promise<{ sortBy?: SortOptions; page?: string; q?: string; size?: string; pmin?: string; pmax?: string; stock?: string; sale?: string; new?: string; hits?: string }>
+  searchParams: Promise<{ sortBy?: SortOptions; page?: string; q?: string; size?: string; pmin?: string; pmax?: string; stock?: string; sale?: string; new?: string; hits?: string; tag?: string }>
   params: Promise<{ countryCode: string }>
 }
 
@@ -33,8 +33,8 @@ export default async function StorePage(props: Params) {
   return (
     <div className="bg-oh-paper/60">
       <div className="content-container flex flex-col gap-4 py-6" data-testid="category-container">
-        <StoreBreadcrumb current={q ? `Поиск: ${q}` : searchParams.hits === "1" ? "Хиты продаж" : searchParams.new === "1" ? "Новинки" : searchParams.sale === "1" ? "Акции" : "Все товары"} />
-        <h1 className="oh-h text-[30px]">{q ? `Поиск «${q}»` : searchParams.hits === "1" ? "Хиты продаж" : searchParams.new === "1" ? "Новинки" : searchParams.sale === "1" ? "Акции" : "Все товары"}</h1>
+        <StoreBreadcrumb current={q ? `Поиск: ${q}` : searchParams.hits === "1" ? "Хиты продаж" : searchParams.new === "1" ? "Новинки" : searchParams.sale === "1" ? "Акции" : searchParams.tag ? `#${searchParams.tag}` : "Все товары"} />
+        <h1 className="oh-h text-[30px]">{q ? `Поиск «${q}»` : searchParams.hits === "1" ? "Хиты продаж" : searchParams.new === "1" ? "Новинки" : searchParams.sale === "1" ? "Акции" : searchParams.tag ? `#${searchParams.tag}` : "Все товары"}</h1>
         <div className="flex flex-col gap-3 small:flex-row small:items-start">
           <RefinementList sortBy={sort} categories={categories} />
           <div className="w-full">

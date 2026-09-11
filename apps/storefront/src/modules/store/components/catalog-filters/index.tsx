@@ -30,8 +30,8 @@ const CatalogFiltersBar = ({ facets, filters }: { facets: CatalogFacets; filters
   const selected = new Set(filters.size || [])
   const toggleSize = (k: string) => { const next = new Set(selected); next.has(k) ? next.delete(k) : next.add(k); push({ size: [...next].join(",") }) }
   const applyPrice = () => push({ pmin: Number(pmin) > 0 ? String(Number(pmin)) : "", pmax: Number(pmax) > 0 ? String(Number(pmax)) : "" })
-  const active = selected.size > 0 || !!filters.pmin || !!filters.pmax || filters.stock !== "any" || !!filters.sale || !!filters.new || !!filters.hits
-  const reset = () => push({ size: "", pmin: "", pmax: "", stock: "", sale: "", new: "", hits: "" })
+  const active = selected.size > 0 || !!filters.pmin || !!filters.pmax || filters.stock !== "any" || !!filters.sale || !!filters.new || !!filters.hits || !!filters.tag
+  const reset = () => push({ size: "", pmin: "", pmax: "", stock: "", sale: "", new: "", hits: "", tag: "" })
 
   const LIMIT = 18
   const sizes = showAll ? facets.sizes : facets.sizes.slice(0, LIMIT)
