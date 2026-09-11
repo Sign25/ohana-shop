@@ -5,11 +5,13 @@
 export type Requisites = {
   name: string; inn: string; kpp: string; ogrn: string; address: string; phone: string; email: string
   bank: string; bik: string; rs: string; ks: string; director: string; accountant: string
+  logo_url: string; stamp_url: string
 }
 export const DEFAULT_REQUISITES: Requisites = {
   name: "Общество с ограниченной ответственностью «Охана Маркет»", inn: "5501191676", kpp: "550301001", ogrn: "1185543026822",
   address: "644009, Омская область, г. Омск, ул. 26-я Линия, д. 85А", phone: "8 (991) 430-17-30", email: "info@ohanamarket.ru",
   bank: "", bik: "", rs: "", ks: "", director: "", accountant: "",
+  logo_url: "", stamp_url: "",
 }
 const esc = (s: any) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
 const rub = (n: any) => (Number(n) || 0).toLocaleString("ru-RU", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -53,13 +55,15 @@ h1{font-size:18px;margin:18px 0 4px}
 .items th{background:#f2f2f2;font-weight:bold}
 .c{text-align:center}.r{text-align:right;white-space:nowrap}.mut{color:#666;font-size:11px}
 .tot td{border:0;padding:2px 6px;text-align:right}
-.sign{margin-top:28px;display:flex;gap:60px}.sign div{flex:1}.sign .l{border-bottom:1px solid #000;height:30px}
+.sign{margin-top:22px;display:flex;gap:40px;align-items:flex-end;position:relative}.sign>div{flex:1}.sign .l{border-bottom:1px solid #000;height:34px}
+.stamp{position:absolute;left:150px;top:-52px;width:130px;height:130px;opacity:.95}
 .warn{background:#fff3cd;border:1px solid #e0b300;padding:8px 10px;margin-bottom:12px}
 .note{color:#444;font-size:11px;margin-top:14px}
 @media print{.noprint{display:none}body{padding:0}}
 </style></head><body>
 <div class="noprint" style="margin-bottom:12px"><button onclick="window.print()">Печать / сохранить в PDF</button></div>
-${missing ? `<div class="warn noprint">Не заполнены банковские реквизиты продавца. Заполните в админке: Настройки → Магазин → Метаданные, ключи <b>bank</b>, <b>bik</b>, <b>rs</b> (расчётный счёт), <b>ks</b> (корр. счёт), <b>director</b>, <b>accountant</b>.</div>` : ""}
+${req.logo_url ? `<div style="margin-bottom:10px"><img src="${esc(req.logo_url)}" alt="" style="height:44px"></div>` : ""}
+${missing ? `<div class="warn noprint">Не заполнены банковские реквизиты продавца. Заполните в админке: Настройки → Магазин → Метаданные, ключи <b>bank</b>, <b>bik</b>, <b>rs</b> (расчётный счёт), <b>ks</b> (корр. счёт); по желанию <b>director</b>, <b>accountant</b>, <b>stamp_url</b>, <b>logo_url</b>.</div>` : ""}
 <table class="bank"><tr><td colspan="2" style="width:50%">${esc(req.bank || "Банк получателя")}</td><td style="width:12%">БИК</td><td>${esc(req.bik)}</td></tr>
 <tr><td colspan="2"></td><td>Сч. №</td><td>${esc(req.ks)}</td></tr>
 <tr><td>ИНН ${esc(req.inn)}</td><td>КПП ${esc(req.kpp)}</td><td rowspan="2">Сч. №</td><td rowspan="2">${esc(req.rs)}</td></tr>
@@ -73,7 +77,7 @@ ${missing ? `<div class="warn noprint">Не заполнены банковск�
 <table class="tot" style="margin-top:6px"><tr><td>Итого:</td><td style="width:110px"><b>${rub(total)}</b></td></tr><tr><td>Без налога (НДС)</td><td>—</td></tr><tr><td>Всего к оплате:</td><td><b>${rub(total)}</b></td></tr></table>
 <p>Всего наименований ${(order.items || []).length}, на сумму ${rub(total)} руб.<br><b>${esc(amountInWords(total))}</b></p>
 <div class="line"></div>
-<div class="sign"><div>Руководитель<div class="l"></div><span class="mut">${esc(req.director)}</span></div><div>Бухгалтер<div class="l"></div><span class="mut">${esc(req.accountant)}</span></div></div>
+<div class="sign">${req.stamp_url ? `<img class="stamp" src="${esc(req.stamp_url)}" alt="">` : ""}<div>Руководитель<div class="l"></div><span class="mut">${esc(req.director)}</span></div><div>Бухгалтер<div class="l"></div><span class="mut">${esc(req.accountant)}</span></div><div style="flex:0 0 120px"></div></div>
 <p class="note">Оплата данного счёта означает согласие с условиями поставки товара. Счёт действителен 3 банковских дня. Товар отгружается после поступления оплаты; ${qty} шт., доставка ${esc((order.shipping_methods || []).map((s: any) => s.name).join(", ") || "по договорённости")}.</p>
 </body></html>`
 }
