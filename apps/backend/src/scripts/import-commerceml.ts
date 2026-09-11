@@ -194,112 +194,125 @@ export default async function importCml({ container, args }: ExecArgs) {
     return result[0].id
   }
 
-  const stat = { newProducts: 0, newVariants: 0, updated: 0, imagesAdded: 0, skippedOutOfSite: 0 }
+  const stat = { newProducts: 0, newVariants: 0, updated: 0, imagesAdded: 0, skippedOutOfSite: 0, errors: 0 }
   const imgOk = (rel: string) => fs.existsSync(path.join(WEB_DIR, webRel(rel)))
   let processed = 0
 
   for (const [nom, group] of byNom) {
-    if (limit && processed >= limit) break
-    const main = group[0]
-    if (!main.groups.some((g) => inSite(g))) { stat.skippedOutOfSite++; continue }
-    processed++
-    const f = main.props
-    const packQty = num(f["Количество товаров в упаковке"]) || null
-    const specMeta = {
-      code: main.article || null, guid: nom, model: f["Модель"] || null, size_range: f["Размерная линейка"] || null,
-      manufacturer: f["Изготовитель"] || null, composition: f["Состав"] || null, color_label: f["Цвет"] || null,
-      cert_doc: f["Документ соответствия"] || null, cert_issued: f["Дата выдачи"] || null, cert_until: f["Дата окончания действия"] || null,
-      cert_org: f["Орган сертификации"] || null, foreign_name: f["Наименование иностранное"] || null, label_name: f["Наименование для этикетки"] || null,
-    }
-    const catIds = (await Promise.all([...new Set(group.flatMap((i) => i.groups))].map(ensureCategory))).filter(Boolean) as string[]
-    // фото: объединяем по всем размерам, без дублей, первое у первой позиции = главное; только те, что уже пережаты
-    const seen = new Set<string>(); const imgs: string[] = []
-    for (const it of group) for (const im of it.images) { const rel = im.replace(/^import_files\//, ""); if (!seen.has(rel) && imgOk(im)) { seen.add(rel); imgs.push(webUrl(im)) } }
-    const title = cleanTitle(main.name)
-    const description = group.map((i) => i.desc).sort((a, b) => b.length - a.length)[0] || ""
-
-    const makeVariant = (it: CmlItem, sizes: string[], colors: string[]) => {
-      const sizeKey = (it.size.split(" ")[0] || "std").replace(/[^0-9a-zA-Zа-яА-Я]/g, "")
-      let sku = `${it.article || "art"}-${sizeKey}`; if (colors.length > 1 && it.color) sku += "-" + translit(it.color).slice(0, 12)
-      if (usedSkus.has(sku)) sku = `${sku}-${it.char.slice(0, 6)}`; usedSkus.add(sku)
-      const opts: Record<string, string> = {}
-      if (sizes.length) opts["Размер"] = it.size || sizes[0]
-      if (colors.length) opts["Цвет"] = it.color || colors[0]
-      const w = Math.round(num(it.props["Вес"])) || undefined
-      return {
-        title: [it.size, colors.length > 1 ? it.color : ""].filter(Boolean).join(" / ") || "Стандарт",
-        sku, barcode: undefined as string | undefined, options: Object.keys(opts).length ? opts : { Вариант: "Стандарт" }, manage_inventory: true, allow_backorder: false,
-        weight: w, length: num(it.props["Длина"]) || undefined, width: num(it.props["Ширина"]) || undefined, height: num(it.props["Высота"]) || undefined,
-        metadata: { guid: it.id, size: it.size, color: it.color, pack_qty: packQty, pack_unit: "N", qty_step: packQty || 1, min_qty: packQty || 1, barcode: it.props["Баркод для оптовиков"] || null, source: "1c" },
+    try {
+      if (limit && processed >= limit) break
+      const main = group[0]
+      if (!main.groups.some((g) => inSite(g))) { stat.skippedOutOfSite++; continue }
+      processed++
+      const f = main.props
+      const packQty = num(f["Количество товаров в упаковке"]) || null
+      const specMeta = {
+        code: main.article || null, guid: nom, model: f["Модель"] || null, size_range: f["Размерная линейка"] || null,
+        manufacturer: f["Изготовитель"] || null, composition: f["Состав"] || null, color_label: f["Цвет"] || null,
+        cert_doc: f["Документ соответствия"] || null, cert_issued: f["Дата выдачи"] || null, cert_until: f["Дата окончания действия"] || null,
+        cert_org: f["Орган сертификации"] || null, foreign_name: f["Наименование иностранное"] || null, label_name: f["Наименование для этикетки"] || null,
       }
-    }
+      const catIds = (await Promise.all([...new Set(group.flatMap((i) => i.groups))].map(ensureCategory))).filter(Boolean) as string[]
+      // фото: объединяем по всем размерам, без дублей, первое у первой позиции = главное; только те, что уже пережаты
+      const seen = new Set<string>(); const imgs: string[] = []
+      for (const it of group) for (const im of it.images) { const rel = im.replace(/^import_files\//, ""); if (!seen.has(rel) && imgOk(im)) { seen.add(rel); imgs.push(webUrl(im)) } }
+      const title = cleanTitle(main.name)
+      const description = group.map((i) => i.desc).sort((a, b) => b.length - a.length)[0] || ""
 
-    const existing = prodByGuid.get(nom)
-    if (!existing) {
-      // --- новый товар ---
-      const sizes = [...new Set(group.map((i) => it_size(i)).filter(Boolean))], colors = [...new Set(group.map((i) => i.color).filter(Boolean))]
-      let handle = translit(`${main.article} ${title}`) || `p-${nom.slice(0, 8)}`
-      if (usedHandles.has(handle)) handle = `${handle}-${nom.slice(0, 6)}`; usedHandles.add(handle)
-      const options: { title: string; values: string[] }[] = []
-      if (sizes.length) options.push({ title: "Размер", values: sizes }); if (colors.length) options.push({ title: "Цвет", values: colors })
-      const variants = group.map((it) => makeVariant(it, sizes, colors))
-      stat.newProducts++; stat.newVariants += variants.length
-      if (dry) { logger.info(`[dry] новый товар «${title}» (${main.article}): ${variants.length} разм., фото ${imgs.length}, категорий ${catIds.length}`); continue }
-      await createProductsWorkflow(container).run({ input: { products: [{
-        title, handle, status: ProductStatus.PUBLISHED, description,
-        options: options.length ? options : [{ title: "Вариант", values: ["Стандарт"] }], variants,
-        images: imgs.map((url) => ({ url })), thumbnail: imgs[0], categories: catIds.map((id) => ({ id })), sales_channels: [{ id: channel.id }],
-        shipping_profile_id: shippingProfile?.id, metadata: { ...specMeta, cscart_key: null },
-      }] } })
-      logger.info(`новый товар «${title}» (${main.article}): ${variants.length} разм.`)
-      continue
-    }
-
-    // --- существующий товар: описание, фото, характеристики, новые размеры ---
-    const upd: any = {}
-    if (description && description.length > (existing.description || "").length + 20) upd.description = description
-    const have = new Set((existing.images || []).map((im: any) => path.basename(im.url)))
-    const add = imgs.filter((u) => !have.has(path.basename(u)))
-    if (add.length) { upd.images = [...(existing.images || []).map((im: any) => ({ url: im.url })), ...add.map((url) => ({ url }))]; stat.imagesAdded += add.length; if (!existing.thumbnail) upd.thumbnail = upd.images[0].url }
-    const m = existing.metadata || {}
-    const metaChanged = Object.entries(specMeta).some(([k, v]) => v && String(m[k] ?? "") !== String(v))
-    if (metaChanged) upd.metadata = { ...m, ...Object.fromEntries(Object.entries(specMeta).filter(([, v]) => v)) }
-    const newCats = catIds.filter((id) => !(existing.categories || []).some((c: any) => c.id === id))
-    if (newCats.length) upd.categories = [...(existing.categories || []).map((c: any) => ({ id: c.id })), ...newCats.map((id) => ({ id }))]
-
-    // новый размер = нет варианта ни с таким GUID, ни с таким же размером/цветом (у карточек, склеенных из двух
-    // номенклатур 1С — «Сайт ОПТ+РОЗН» и «Номенклатура 2026», — GUID вариантов из другой номенклатуры)
-    // Сравниваем по ключу размера (у CS-Cart-вариантов формат «46 164 (92-72-100)», у 1С бывает «46 (164-72-100)»);
-    // цвет учитываем, только если у товара несколько цветов. Новые размеры добавляем лишь при остатке > 0 —
-    // старые характеристики без остатка на витрине не нужны, появится остаток — доедут ночным импортом.
-    const exColors = new Set((existing.variants || []).map((v: any) => String(v.metadata?.color || "").toLowerCase()).filter(Boolean))
-    const multiColor = exColors.size > 1 || new Set(group.map((i) => i.color.toLowerCase()).filter(Boolean)).size > 1
-    const key = (size: string, color: string) => multiColor ? `${sizeKey(size)}|${(color || "").toLowerCase()}` : sizeKey(size)
-    const haveSC = new Set((existing.variants || []).map((v: any) => key(v.metadata?.size, v.metadata?.color)))
-    const missing = group.filter((it) => !varByGuid.has(it.id) && !haveSC.has(key(it.size, it.color)) && (it.qty > 0 || !offerFile))
-    if (Object.keys(upd).length) {
-      stat.updated++
-      if (!dry) await updateProductsWorkflow(container).run({ input: { selector: { id: existing.id }, update: upd } })
-    }
-    if (missing.length) {
-      const sizeOpt = existing.options?.find((o: any) => o.title === "Размер"), colorOpt = existing.options?.find((o: any) => o.title === "Цвет")
-      const sizes = sizeOpt ? sizeOpt.values.map((v: any) => v.value) : [], colors = colorOpt ? colorOpt.values.map((v: any) => v.value) : []
-      const variants = missing.map((it) => makeVariant(it, sizes.length ? [...sizes, it.size] : [], colors.length ? [...colors, it.color] : [])).map((v) => ({ ...v, product_id: existing.id }))
-      stat.newVariants += variants.length
-      if (dry) logger.info(`[dry] «${existing.title}»: новые размеры ${missing.map((i) => `${i.size || i.char.slice(0, 8)}(${i.qty})`).join(", ")}`)
-      else {
-        // новые значения опций у существующего товара: добавить в опцию через updateProducts
-        const optUpd: any[] = []
-        if (sizeOpt) { const vals = new Set(sizes); missing.forEach((i) => i.size && vals.add(i.size)); if (vals.size !== sizes.length) optUpd.push({ id: sizeOpt.id, title: "Размер", values: [...vals] }) }
-        if (colorOpt) { const vals = new Set(colors); missing.forEach((i) => i.color && vals.add(i.color)); if (vals.size !== colors.length) optUpd.push({ id: colorOpt.id, title: "Цвет", values: [...vals] }) }
-        if (optUpd.length) await updateProductsWorkflow(container).run({ input: { selector: { id: existing.id }, update: { options: optUpd } } })
-        await createProductVariantsWorkflow(container).run({ input: { product_variants: variants } })
-        logger.info(`«${existing.title}»: добавлены размеры ${missing.map((i) => i.size).join(", ")}`)
+      const makeVariant = (it: CmlItem, sizes: string[], colors: string[]) => {
+        const sizeKey = (it.size.split(" ")[0] || "std").replace(/[^0-9a-zA-Zа-яА-Я]/g, "")
+        let sku = `${it.article || "art"}-${sizeKey}`; if (colors.length > 1 && it.color) sku += "-" + translit(it.color).slice(0, 12)
+        if (usedSkus.has(sku)) sku = `${sku}-${(it.char || it.nom).slice(0, 6)}` // без характеристики — по GUID номенклатуры
+      if (usedSkus.has(sku)) sku = `${sku}-${Date.now().toString(36).slice(-4)}`
+      usedSkus.add(sku)
+        const opts: Record<string, string> = {}
+        if (sizes.length) opts["Размер"] = it.size || sizes[0]
+        if (colors.length) opts["Цвет"] = it.color || colors[0]
+        const w = Math.round(num(it.props["Вес"])) || undefined
+        return {
+          title: [it.size, colors.length > 1 ? it.color : ""].filter(Boolean).join(" / ") || "Стандарт",
+          sku, barcode: undefined as string | undefined, options: Object.keys(opts).length ? opts : { Вариант: "Стандарт" }, manage_inventory: true, allow_backorder: false,
+          weight: w, length: num(it.props["Длина"]) || undefined, width: num(it.props["Ширина"]) || undefined, height: num(it.props["Высота"]) || undefined,
+          metadata: { guid: it.id, size: it.size, color: it.color, pack_qty: packQty, pack_unit: "N", qty_step: packQty || 1, min_qty: packQty || 1, barcode: it.props["Баркод для оптовиков"] || null, source: "1c" },
+        }
       }
+
+      const existing = prodByGuid.get(nom)
+      if (!existing) {
+        // --- новый товар ---
+        const sizes = [...new Set(group.map((i) => it_size(i)).filter(Boolean))], colors = [...new Set(group.map((i) => i.color).filter(Boolean))]
+        let handle = translit(`${main.article} ${title}`) || `p-${nom.slice(0, 8)}`
+        if (usedHandles.has(handle)) handle = `${handle}-${nom.slice(0, 6)}`; usedHandles.add(handle)
+        const options: { title: string; values: string[] }[] = []
+        if (sizes.length) options.push({ title: "Размер", values: sizes }); if (colors.length) options.push({ title: "Цвет", values: colors })
+        const variants = group.map((it) => makeVariant(it, sizes, colors))
+        stat.newProducts++; stat.newVariants += variants.length
+        if (dry) { logger.info(`[dry] новый товар «${title}» (${main.article}): ${variants.length} разм., фото ${imgs.length}, категорий ${catIds.length}`); continue }
+        await createProductsWorkflow(container).run({ input: { products: [{
+          title, handle, status: ProductStatus.PUBLISHED, description,
+          options: options.length ? options : [{ title: "Вариант", values: ["Стандарт"] }], variants,
+          images: imgs.map((url) => ({ url })), thumbnail: imgs[0], categories: catIds.map((id) => ({ id })), sales_channels: [{ id: channel.id }],
+          shipping_profile_id: shippingProfile?.id, metadata: { ...specMeta, cscart_key: null },
+        }] } })
+        logger.info(`новый товар «${title}» (${main.article}): ${variants.length} разм.`)
+        continue
+      }
+
+      // --- существующий товар: описание, фото, характеристики, новые размеры ---
+      const upd: any = {}
+      if (description && description.length > (existing.description || "").length + 20) upd.description = description
+      const have = new Set((existing.images || []).map((im: any) => path.basename(im.url)))
+      const add = imgs.filter((u) => !have.has(path.basename(u)))
+      if (add.length) { upd.images = [...(existing.images || []).map((im: any) => ({ url: im.url })), ...add.map((url) => ({ url }))]; stat.imagesAdded += add.length; if (!existing.thumbnail) upd.thumbnail = upd.images[0].url }
+      const m = existing.metadata || {}
+      const metaChanged = Object.entries(specMeta).some(([k, v]) => v && String(m[k] ?? "") !== String(v))
+      if (metaChanged) upd.metadata = { ...m, ...Object.fromEntries(Object.entries(specMeta).filter(([, v]) => v)) }
+      const newCats = catIds.filter((id) => !(existing.categories || []).some((c: any) => c.id === id))
+      if (newCats.length) upd.categories = [...(existing.categories || []).map((c: any) => ({ id: c.id })), ...newCats.map((id) => ({ id }))]
+
+      // новый размер = нет варианта ни с таким GUID, ни с таким же размером/цветом (у карточек, склеенных из двух
+      // номенклатур 1С — «Сайт ОПТ+РОЗН» и «Номенклатура 2026», — GUID вариантов из другой номенклатуры)
+      // Сравниваем по ключу размера (у CS-Cart-вариантов формат «46 164 (92-72-100)», у 1С бывает «46 (164-72-100)»);
+      // цвет учитываем, только если у товара несколько цветов. Новые размеры добавляем лишь при остатке > 0 —
+      // старые характеристики без остатка на витрине не нужны, появится остаток — доедут ночным импортом.
+      const exColors = new Set((existing.variants || []).map((v: any) => String(v.metadata?.color || "").toLowerCase()).filter(Boolean))
+      const multiColor = exColors.size > 1 || new Set(group.map((i) => i.color.toLowerCase()).filter(Boolean)).size > 1
+      const key = (size: string, color: string) => multiColor ? `${sizeKey(size)}|${(color || "").toLowerCase()}` : sizeKey(size)
+      const haveSC = new Set((existing.variants || []).map((v: any) => key(v.metadata?.size, v.metadata?.color)))
+      // точное совпадение размера и цвета (значения опций) — такой вариант Medusa всё равно не даст создать
+      const norm = (x: any) => String(x || "").toLowerCase().replace(/\s+/g, " ").trim()
+      const haveExact = new Set((existing.variants || []).map((v: any) => `${norm(v.metadata?.size)}|${norm(v.metadata?.color)}`))
+      const haveSize = new Set((existing.variants || []).map((v: any) => norm(v.metadata?.size)))
+      const colorOptExists = !!existing.options?.find((o: any) => o.title === "Цвет")
+      // номенклатура без характеристик (Ид без «#», размера нет): у товара уже есть вариант — добавлять нечего
+      const missing = group.filter((it) => !varByGuid.has(it.id) && (it.size || !(existing.variants || []).length) && !haveSC.has(key(it.size, it.color)) && !haveExact.has(`${norm(it.size)}|${norm(it.color)}`) && (colorOptExists || !haveSize.has(norm(it.size))) && (it.qty > 0 || !offerFile))
+      if (Object.keys(upd).length) {
+        stat.updated++
+        if (!dry) await updateProductsWorkflow(container).run({ input: { selector: { id: existing.id }, update: upd } })
+      }
+      if (missing.length) {
+        const sizeOpt = existing.options?.find((o: any) => o.title === "Размер"), colorOpt = existing.options?.find((o: any) => o.title === "Цвет")
+        const sizes = sizeOpt ? sizeOpt.values.map((v: any) => v.value) : [], colors = colorOpt ? colorOpt.values.map((v: any) => v.value) : []
+        const variants = missing.map((it) => makeVariant(it, sizes.length ? [...sizes, it.size] : [], colors.length ? [...colors, it.color] : [])).map((v) => ({ ...v, product_id: existing.id }))
+        stat.newVariants += variants.length
+        if (dry) logger.info(`[dry] «${existing.title}»: новые размеры ${missing.map((i) => `${i.size || i.char.slice(0, 8)}(${i.qty})`).join(", ")}`)
+        else {
+          // новые значения опций у существующего товара: добавить в опцию через updateProducts
+          const optUpd: any[] = []
+          if (sizeOpt) { const vals = new Set(sizes); missing.forEach((i) => i.size && vals.add(i.size)); if (vals.size !== sizes.length) optUpd.push({ id: sizeOpt.id, title: "Размер", values: [...vals] }) }
+          if (colorOpt) { const vals = new Set(colors); missing.forEach((i) => i.color && vals.add(i.color)); if (vals.size !== colors.length) optUpd.push({ id: colorOpt.id, title: "Цвет", values: [...vals] }) }
+          if (optUpd.length) await updateProductsWorkflow(container).run({ input: { selector: { id: existing.id }, update: { options: optUpd } } })
+          await createProductVariantsWorkflow(container).run({ input: { product_variants: variants } })
+          logger.info(`«${existing.title}»: добавлены размеры ${missing.map((i) => i.size).join(", ")}`)
+        }
+      }
+    } catch (e: any) {
+      stat.errors++
+      logger.error(`ошибка на «${group[0]?.name}» (арт. ${group[0]?.article}): ${e?.message || e}`)
     }
   }
 
-  logger.info(`итог${dry ? " (dry)" : ""}: новых товаров ${stat.newProducts}, новых размеров ${stat.newVariants}, обновлено товаров ${stat.updated}, добавлено фото ${stat.imagesAdded}, вне области сайта ${stat.skippedOutOfSite}; ${((Date.now() - t0) / 1000).toFixed(1)} с`)
+  logger.info(`итог${dry ? " (dry)" : ""}: новых товаров ${stat.newProducts}, новых размеров ${stat.newVariants}, обновлено товаров ${stat.updated}, добавлено фото ${stat.imagesAdded}, вне области сайта ${stat.skippedOutOfSite}, ошибок ${stat.errors}; ${((Date.now() - t0) / 1000).toFixed(1)} с`)
 }
 
 function it_size(i: CmlItem) { return i.size }
