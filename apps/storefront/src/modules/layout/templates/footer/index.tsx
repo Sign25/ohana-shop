@@ -1,6 +1,7 @@
 import { listCategoryTree } from "@/lib/data/categories"
 import LocalizedClientLink from "@/modules/common/components/localized-client-link"
 import Image from "next/image"
+import { MARKETPLACES } from "@/lib/util/marketplaces"
 
 /** Служебные страницы пока живут на старом сайте — ссылки временные, до переноса разделов. */
 const BUYERS = [
@@ -12,6 +13,7 @@ const BUYERS = [
   { label: "Вопросы и ответы", href: "/p/faq" },
   { label: "Подбор размера", href: "/podbor-razmera" },
   { label: "Бизнес с Оханой", href: "/biznes-s-ohanoy" },
+  { label: "Совместные покупки", href: "/sovmestnye-pokupki" },
 ]
 const COMPANY = [
   { label: "О компании", href: "/p/about" },
@@ -91,6 +93,10 @@ export default async function Footer() {
       <div className="border-t border-oh-line">
         <div className="content-container flex flex-col gap-2 py-4 text-[12px] text-oh-muted small:flex-row small:items-center small:justify-between">
           <span>© {new Date().getFullYear()} Ohana Market. Оптовые поставки одежды и домашнего текстиля.</span>
+          <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span>Мы на маркетплейсах:</span>
+            {MARKETPLACES.map((m) => <a key={m.key} href={m.href} target="_blank" rel="noopener nofollow" className="font-medium text-oh-graphite hover:text-oh-azure">{m.name}</a>)}
+          </span>
           <span>Марка №1 в России · Бренд года 2025</span>
         </div>
       </div>

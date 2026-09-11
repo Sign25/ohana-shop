@@ -19,6 +19,7 @@ import {
   updateProductVariantsWorkflow,
 } from "@medusajs/medusa/core-flows"
 import * as fs from "fs"
+import { LINEIKA_CATALOG, LINEIKA_GROUP, setVariant, unitGrams, cleanTitle as cleanTitleShared } from "../lib/lineika"
 import * as path from "path"
 
 const CML_DIR = "/srv/ohana/shared/cml"
@@ -40,11 +41,7 @@ type CmlItem = {
 /** ключ размера для сравнения: «46 164 (92-72-100)» ≈ «46 (164-72-100)» ≈ «46» → "46"; «L» → "l»; «46-54» → "46-54" */
 const sizeKey = (size: string) => (size || "").toLowerCase().replace(/\s+/g, " ").trim().split(" ")[0].replace(/см$/, "")
 
-function cleanTitle(name: string): string {
-  let t = name.replace(/\s+/g, " ").trim().replace(/^\d{4,6}\s+/, "")
-  t = t.replace(/\s*\(\s*(?:цвет|размер)[\s\S]*$/i, "").replace(/\s*\(\s*\d{2,3}(?:\s*-\s*\d{2,3})?(?:\s*\/\s*\d{2,3})?\s*\)\s*$/, "").replace(/\s+,/g, ",").replace(/\s{2,}/g, " ").trim()
-  return t.charAt(0).toUpperCase() + t.slice(1)
-}
+const cleanTitle = cleanTitleShared
 function translit(s: string): string {
   const m: Record<string, string> = { а: "a", б: "b", в: "v", г: "g", д: "d", е: "e", ё: "e", ж: "zh", з: "z", и: "i", й: "y", к: "k", л: "l", м: "m", н: "n", о: "o", п: "p", р: "r", с: "s", т: "t", у: "u", ф: "f", х: "h", ц: "c", ч: "ch", ш: "sh", щ: "sch", ъ: "", ы: "y", ь: "", э: "e", ю: "yu", я: "ya" }
   return s.toLowerCase().split("").map((c) => m[c] ?? c).join("").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")
@@ -67,13 +64,15 @@ export default async function importCml({ container, args }: ExecArgs) {
   // offers*.xml лежит рядом: остаток и реквизиты характеристики (Цвет/Размер). Характеристики без реквизитов —
   // старые дубли, которые типовой обмен 1С отбрасывал (invalid_features_count); при наличии оформленных — пропускаем их.
   const offerFile = fs.readdirSync(path.dirname(file)).filter((f) => /^offers.*\.xml$/.test(f)).map((f) => path.join(path.dirname(file), f)).sort().pop()
-  const offers = new Map<string, { qty: number; color: string; size: string; hasChar: boolean }>()
+  const offers = new Map<string, { qty: number; color: string; size: string; hasChar: boolean; pack: boolean }>()
   if (offerFile) {
     for (const b of blocks(fs.readFileSync(offerFile, "utf8"), "Предложение")) {
       const id = tag(b, "Ид").toLowerCase(); if (!id) continue
       const ch: Record<string, string> = {}
       for (const c of blocks(b, "ХарактеристикаТовара")) ch[tag(c, "Наименование")] = tag(c, "Значение")
-      offers.set(id, { qty: num(tag(b, "Количество")), color: ch["Цвет"] || "", size: ch["Размер"] || "", hasChar: !!(ch["Цвет"] || ch["Размер"]) })
+      const unit = b.match(/<БазоваяЕдиница[^>]*Код="\s*(\d+)[^>]*НаименованиеПолное="([^"]*)"/)
+      const pack = !!unit && (unit[1] === "778" || /упаков/i.test(unit[2]))
+      offers.set(id, { qty: num(tag(b, "Количество")), color: ch["Цвет"] || "", size: ch["Размер"] || "", hasChar: !!(ch["Цвет"] || ch["Размер"]), pack })
     }
     logger.info(`offers: ${path.basename(offerFile)}, предложений ${offers.size}`)
   } else logger.warn("offers*.xml не найден — остатки и реквизиты характеристик недоступны, фильтр дублей отключён")
@@ -104,6 +103,11 @@ export default async function importCml({ container, args }: ExecArgs) {
   }
   const groupPath = (id: string): string[] => { const p: string[] = []; let c: string | null | undefined = id; while (c) { p.unshift(groupName.get(c) || "?"); c = groupParent.get(c) } return p }
   const inSite = (id: string) => groupPath(id).some((n) => SITE_GROUPS.has(n.trim()))
+  // «Номенклатура 2026»: продажа только комплектами — по Ид каталога выгрузки или по группе
+  const catalogId = (xml.match(/<Каталог>\s*<Ид>([^<]+)<\/Ид>/) || [])[1]?.trim().toLowerCase() || ""
+  const isLineikaGroup = (id: string) => groupPath(id).some((n) => n.trim() === LINEIKA_GROUP)
+  const fileIsLineika = catalogId === LINEIKA_CATALOG
+  logger.info(`каталог выгрузки: ${catalogId}${fileIsLineika ? " (Номенклатура 2026 — комплекты)" : ""}`)
   logger.info(`классификатор: свойств ${propName.size}, групп ${groupName.size}`)
 
   // --- товары ---
@@ -224,6 +228,8 @@ export default async function importCml({ container, args }: ExecArgs) {
         cert_doc: f["Документ соответствия"] || null, cert_issued: f["Дата выдачи"] || null, cert_until: f["Дата окончания действия"] || null,
         cert_org: f["Орган сертификации"] || null, foreign_name: f["Наименование иностранное"] || null, label_name: f["Наименование для этикетки"] || null,
       }
+      const isLineika = fileIsLineika || group.some((i) => i.groups.some(isLineikaGroup))
+      const packFromOffers = group.some((i) => offers.get(i.id.toLowerCase())?.pack)
       const catIds = (await Promise.all([...new Set(group.flatMap((i) => i.groups))].map(ensureCategory))).filter(Boolean) as string[]
       // фото: объединяем по всем размерам, без дублей, первое у первой позиции = главное; только те, что уже пережаты
       const seen = new Set<string>(); const imgs: string[] = []
@@ -242,7 +248,7 @@ export default async function importCml({ container, args }: ExecArgs) {
         const opts: Record<string, string> = {}
         if (sizes.length) opts["Размер"] = it.size || sizes[0]
         if (colors.length) opts["Цвет"] = it.color || colors[0]
-        const w = Math.round(num(it.props["Вес"])) || undefined
+        const w = unitGrams(num(it.props["Вес"]), packQty, "N") || undefined
         return {
           title: [it.size, colors.length > 1 ? it.color : ""].filter(Boolean).join(" / ") || "Стандарт",
           sku, barcode: undefined as string | undefined, options: Object.keys(opts).length ? opts : { Вариант: "Стандарт" }, manage_inventory: true, allow_backorder: false,
@@ -259,7 +265,15 @@ export default async function importCml({ container, args }: ExecArgs) {
         if (usedHandles.has(handle)) handle = `${handle}-${nom.slice(0, 6)}`; usedHandles.add(handle)
         const options: { title: string; values: string[] }[] = []
         if (sizes.length) options.push({ title: "Размер", values: sizes }); if (colors.length) options.push({ title: "Цвет", values: colors })
-        const variants = group.map((it) => makeVariant(it, sizes, colors))
+        let variants: any[] = group.map((it) => makeVariant(it, sizes, colors))
+        if (isLineika) {
+          // комплект: один вариант на номенклатуру, размер = размерная линейка, шаг = штук в комплекте
+          options.length = 0; options.push({ title: "Размер", values: [f["Размерная линейка"] || "Комплект"] })
+          const packUnit = packFromOffers ? "Y" : "N"
+          const w = unitGrams(num(f["Вес"]), packQty, packUnit)
+          variants = [setVariant({ article: main.article, nom, sizeRange: f["Размерная линейка"], color: f["Цвет"], setQty: packQty || 1, packUnit, weight: w || undefined, barcode: f["Баркод для оптовиков"], length: num(f["Длина"]) || undefined, width: num(f["Ширина"]) || undefined, height: num(f["Высота"]) || undefined })]
+          ;(specMeta as any).lineika = packUnit === "N"; (specMeta as any).pack = packUnit !== "N"; (specMeta as any).set_qty = packQty || 1
+        }
         stat.newProducts++; stat.newVariants += variants.length
         if (dry) { logger.info(`[dry] новый товар «${title}» (${main.article}): ${variants.length} разм., фото ${imgs.length}, категорий ${catIds.length}`); continue }
         await createProductsWorkflow(container).run({ input: { products: [{
@@ -299,7 +313,8 @@ export default async function importCml({ container, args }: ExecArgs) {
       const haveSize = new Set((existing.variants || []).map((v: any) => norm(v.metadata?.size)))
       const colorOptExists = !!existing.options?.find((o: any) => o.title === "Цвет")
       // номенклатура без характеристик (Ид без «#», размера нет): у товара уже есть вариант — добавлять нечего
-      const missing = group.filter((it) => !varByGuid.has(it.id) && (it.size || !(existing.variants || []).length) && !haveSC.has(key(it.size, it.color)) && !haveExact.has(`${norm(it.size)}|${norm(it.color)}`) && (colorOptExists || !haveSize.has(norm(it.size))) && (it.qty > 0 || !offerFile))
+      const existingIsSet = !!(existing.metadata?.lineika || existing.metadata?.pack || isLineika)
+      const missing = existingIsSet ? [] : group.filter((it) => !varByGuid.has(it.id) && (it.size || !(existing.variants || []).length) && !haveSC.has(key(it.size, it.color)) && !haveExact.has(`${norm(it.size)}|${norm(it.color)}`) && (colorOptExists || !haveSize.has(norm(it.size))) && (it.qty > 0 || !offerFile))
       if (Object.keys(upd).length) {
         stat.updated++
         if (!dry) await updateProductsWorkflow(container).run({ input: { selector: { id: existing.id }, update: upd } })

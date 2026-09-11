@@ -6,8 +6,9 @@ import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
  * размер (по ведущему токену размера варианта), диапазон оптовой цены, наличие («любой размер» / «полный ряд»),
  * сортировка по цене. Возвращает id товаров в нужном порядке + фасеты; сами товары витрина берёт штатным API по id.
  *
- * Параметры: category_id (через запятую), q, size (через запятую, ключи размеров), pmin, pmax, stock=any|full,
- * order=new|price_asc|price_desc|title, limit, offset.
+ * Параметры: category_id (через запятую), q, size (через запятую, ключи размеров), pmin, pmax, stock=any|full|all,
+ * sale=1 (акционная цена из 1С), new=1 (новинки — товары моложе NEW_DAYS дней, но не старше запуска нового сайта),
+ * order=new|price_asc|price_desc|title, limit, offset. Товары без фото не показываем.
  * Данные читаются одним SQL (query.graph с ценами и остатками по 700 товарам занимает ~10 с, SQL — ~100 мс).
  */
 
@@ -22,7 +23,11 @@ const sizeSort = (a: string, b: string) => {
 }
 const list = (v: unknown): string[] => (Array.isArray(v) ? v : typeof v === "string" && v ? v.split(",") : []).map((s) => String(s).trim()).filter(Boolean)
 
-type Row = { id: string; title: string; created_at: Date; size: string | null; price: number | null; stock: number | null }
+type Row = { id: string; title: string; created_at: Date; size: string | null; price: number | null; stock: number | null; sale: number | null }
+
+/** «Новинка» — как на витрине (lib/util/ohana.ts): после запуска нового сайта и не старше 21 дня */
+const NEW_FROM = Date.parse("2026-09-12T00:00:00+03:00"), NEW_DAYS = 21
+const isNew = (created: number) => created >= NEW_FROM && Date.now() - created < NEW_DAYS * 86400000
 
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const pg = req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION) as any
@@ -33,21 +38,23 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     const { rows } = await pg.raw(`with recursive t as (select id from product_category where handle = ? and deleted_at is null
       union all select c.id from product_category c join t on c.parent_category_id = t.id where c.deleted_at is null) select id from t`, [String(qp.category_handle)])
     categoryIds.push(...rows.map((r: any) => r.id))
-    if (!categoryIds.length) return res.json({ ids: [], count: 0, facets: { sizes: [], price_min: 0, price_max: 0, in_stock: 0, full_row: 0 } })
+    if (!categoryIds.length) return res.json({ ids: [], count: 0, facets: { sizes: [], price_min: 0, price_max: 0, in_stock: 0, full_row: 0, sale: 0, new: 0 } })
   }
   const q = String(qp.q || "").trim()
   const sizes = new Set(list(qp.size).map((s) => s.toLowerCase()))
   const pmin = Number(qp.pmin) || 0, pmax = Number(qp.pmax) || 0
   const stock = qp.stock === "full" ? "full" : qp.stock === "any" ? "any" : ""
+  const onlySale = qp.sale === "1", onlyNew = qp.new === "1"
   const order = ["new", "price_asc", "price_desc", "title"].includes(qp.order) ? qp.order : "new"
   const limit = Math.min(Math.max(Number(qp.limit) || 24, 1), 100), offset = Math.max(Number(qp.offset) || 0, 0)
 
-  const where: string[] = ["p.deleted_at is null", "p.status = 'published'"], binds: any[] = []
+  const where: string[] = ["p.deleted_at is null", "p.status = 'published'", "p.thumbnail is not null"], binds: any[] = []
   if (categoryIds.length) { where.push("p.id in (select product_id from product_category_product where product_category_id = any(?))"); binds.push(categoryIds) }
   if (q) { where.push("(p.title ilike ? or p.metadata->>'code' ilike ? or p.description ilike ?)"); binds.push(`%${q}%`, `${q}%`, `%${q}%`) }
 
   const sql = `
     select p.id, p.title, p.created_at, v.metadata->>'size' as size, min(pr.amount)::float as price,
+           nullif(v.metadata->>'price_sale', '')::float as sale,
            coalesce(sum(il.stocked_quantity - il.reserved_quantity), 0)::float as stock
     from product p
     join product_variant v on v.product_id = p.id and v.deleted_at is null
@@ -59,11 +66,12 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     group by p.id, v.id`
   const { rows } = (await pg.raw(sql, binds)) as { rows: Row[] }
 
-  type P = { id: string; title: string; created: number; minPrice: number; sizesIn: Set<string>; sizesAll: Set<string>; anyStock: boolean; full: boolean; n: number }
+  type P = { id: string; title: string; created: number; minPrice: number; sizesIn: Set<string>; sizesAll: Set<string>; anyStock: boolean; full: boolean; n: number; sale: boolean }
   const byId = new Map<string, P>()
   for (const r of rows) {
     let p = byId.get(r.id)
-    if (!p) { p = { id: r.id, title: r.title, created: new Date(r.created_at).getTime(), minPrice: Infinity, sizesIn: new Set(), sizesAll: new Set(), anyStock: false, full: true, n: 0 }; byId.set(r.id, p) }
+    if (!p) { p = { id: r.id, title: r.title, created: new Date(r.created_at).getTime(), minPrice: Infinity, sizesIn: new Set(), sizesAll: new Set(), anyStock: false, full: true, n: 0, sale: false }; byId.set(r.id, p) }
+    if ((r.sale || 0) > 0) p.sale = true
     const k = sizeKey(r.size || ""), inStock = (r.stock || 0) > 0
     p.n++
     if (k) { p.sizesAll.add(k); if (inStock) p.sizesIn.add(k) }
@@ -82,6 +90,8 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     price_max: prices.length ? Math.max(...prices) : 0,
     in_stock: scope.filter((p) => p.anyStock).length,
     full_row: scope.filter((p) => p.anyStock && p.full).length,
+    sale: scope.filter((p) => p.sale && p.anyStock).length,
+    new: scope.filter((p) => isNew(p.created) && p.anyStock).length,
   }
 
   let hits = scope
@@ -90,6 +100,8 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
   if (pmax) hits = hits.filter((p) => isFinite(p.minPrice) && p.minPrice <= pmax)
   if (stock === "any") hits = hits.filter((p) => p.anyStock)
   if (stock === "full") hits = hits.filter((p) => p.anyStock && p.full)
+  if (onlySale) hits = hits.filter((p) => p.sale)
+  if (onlyNew) hits = hits.filter((p) => isNew(p.created))
 
   const price = (p: P) => (isFinite(p.minPrice) ? p.minPrice : 1e12) // без цены — в конец
   const cmp: Record<string, (a: P, b: P) => number> = {

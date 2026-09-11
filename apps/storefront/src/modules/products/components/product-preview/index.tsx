@@ -1,4 +1,5 @@
-import { formatRub, plural, productSummary } from "@/lib/util/ohana"
+import { formatRub, plural, productSummary, saleMode } from "@/lib/util/ohana"
+import ProductBadges from "@/modules/products/components/product-badges"
 import CardImage from "@/modules/products/components/card-image"
 import LocalizedClientLink from "@/modules/common/components/localized-client-link"
 import { HttpTypes } from "@medusajs/types"
@@ -17,6 +18,10 @@ export default async function ProductPreview({
 }) {
   if (!product) return null
   const s = productSummary(product)
+  const sm = saleMode(product)
+  const piece = (x: number) => (sm.priceIsPerPack && sm.perUnit > 1 ? x / sm.perUnit : x)
+  const sale = (product.variants || []).map((v: any) => Number(v.metadata?.price_sale) || 0).filter((x) => x > 0)
+  const minSale = sale.length ? piece(Math.min(...sale)) : null
   const colorLabel = String((product.metadata as any)?.color_label || "").trim()
   const colorHint = colorLabel && !product.title.toLowerCase().includes(colorLabel.toLowerCase().split(/[ ,]/)[0].replace(/(ый|ая|ое|ые|ий|яя)$/, "")) ? colorLabel : ""
   const img = product.thumbnail || product.images?.[0]?.url
@@ -42,11 +47,7 @@ export default async function ProductPreview({
               Всё разобрали
             </span>
           )}
-          {s.packUnit && s.packUnit !== "N" && (
-            <span className="absolute right-3 top-3 rounded-pill bg-oh-mint-deep px-2.5 py-1 text-[12px] font-medium text-white">
-              Упаковка
-            </span>
-          )}
+          <ProductBadges product={product} />
         </div>
         <div className="flex flex-1 flex-col gap-1.5 p-3.5">
           {s.code && <div className="text-[12px] text-oh-muted">Арт. {s.code}</div>}
@@ -58,14 +59,20 @@ export default async function ProductPreview({
           <div className="mt-auto flex flex-col gap-0.5 pt-1">
             {s.minPrice !== null ? (
               <div className="text-[17px] font-semibold text-oh-ink" data-testid="price">
-                {s.minPrice === s.maxPrice ? formatRub(s.minPrice) : `от ${formatRub(s.minPrice)}`}
+                {minSale !== null ? (
+                  <><span className="text-oh-primary">{formatRub(minSale)}</span> <s className="text-[13px] font-normal text-oh-muted">{formatRub(piece(s.minPrice))}</s></>
+                ) : s.minPrice === s.maxPrice ? formatRub(piece(s.minPrice)) : `от ${formatRub(piece(s.minPrice))}`}
+                <span className="text-[12px] font-normal text-oh-muted">/шт</span>
               </div>
             ) : (
               <div className="text-sm text-oh-muted">цена по запросу</div>
             )}
-            {s.minKrupny !== null && s.minKrupny < (s.minPrice ?? Infinity) && (
+            {sm.mode !== "pieces" && s.minPrice !== null && (
+              <div className="text-[12.5px] text-oh-graphite">{sm.mode === "set" ? "комплект" : "упаковка"} {sm.perUnit} шт · {formatRub((minSale ?? piece(s.minPrice)) * sm.perUnit)}</div>
+            )}
+            {minSale === null && s.minKrupny !== null && s.minKrupny < (s.minPrice ?? Infinity) && (
               <div className="text-[13px] text-oh-azure">
-                крупный опт от {formatRub(s.minKrupny)}
+                крупный опт от {formatRub(piece(s.minKrupny))}
               </div>
             )}
           </div>
@@ -75,7 +82,7 @@ export default async function ProductPreview({
                 {stockLabel && <span className={clx("inline-block h-1.5 w-1.5 rounded-full", s.stock > 0 ? "bg-oh-gold" : "bg-oh-line-2")} />}
                 {stockLabel}
               </span>
-              {s.packQty && s.packQty > 1 && <span className="text-oh-graphite">упаковка {s.packQty} шт</span>}
+              {sm.mode === "pieces" && s.packQty && s.packQty > 1 && <span className="text-oh-graphite">упаковка {s.packQty} шт</span>}
             </div>
           )}
         </div>

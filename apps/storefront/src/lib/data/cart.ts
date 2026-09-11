@@ -591,3 +591,10 @@ export async function createCartApproval(cartId: string, createdBy: string) {
 
   return approval
 }
+
+/** Сводка корзины для калькулятора на карточке товара: сумма товаров и число позиций (null — корзины нет) */
+export async function retrieveCartSummary() {
+  const cart = await retrieveCart()
+  if (!cart) return null
+  return { id: cart.id, subtotal: Number(cart.item_subtotal ?? 0), count: (cart.items || []).reduce((a, i) => a + (i.quantity || 0), 0) }
+}

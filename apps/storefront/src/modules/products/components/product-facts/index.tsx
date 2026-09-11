@@ -19,17 +19,26 @@ const ProductFacts = ({ product }: { product: HttpTypes.StoreProduct }) => {
       <span className="flex items-center gap-2">
         {dot(s.stock > 0)}
         {s.stock > 0
-          ? `В наличии ${s.stock} шт · ${s.inStockSizes} из ${s.sizesTotal} ${plural(s.sizesTotal, "размера", "размеров", "размеров")}`
+          ? m.lineika && s.packQty
+            ? `В наличии ${Math.floor(s.stock / s.packQty)} ${plural(Math.floor(s.stock / s.packQty), "комплект", "комплекта", "комплектов")} (${s.stock} шт)`
+            : (s.packUnit === "S" && s.packQty) ? `В наличии ${Math.floor(s.stock / s.packQty)} ${plural(Math.floor(s.stock / s.packQty), "упаковка", "упаковки", "упаковок")}`
+            : s.packUnit === "Y" ? `В наличии ${s.stock} ${plural(s.stock, "упаковка", "упаковки", "упаковок")}`
+            : `В наличии ${s.stock} шт · ${s.inStockSizes} из ${s.sizesTotal} ${plural(s.sizesTotal, "размера", "размеров", "размеров")}`
           : "Нет в наличии — оставьте заявку, сообщим о поступлении"}
       </span>
-      {s.packQty && s.packQty > 1 && (
+      {m.lineika ? (
         <span className="flex items-center gap-2">
           {dot(true)}
-          {s.packUnit === "Y"
+          Продаётся только комплектом — полной размерной линейкой{s.sizeRange ? ` ${s.sizeRange}` : ""}{s.packQty && s.packQty > 1 ? `, ${s.packQty} шт в комплекте` : ""}
+        </span>
+      ) : s.packQty && s.packQty > 1 ? (
+        <span className="flex items-center gap-2">
+          {dot(true)}
+          {s.packUnit === "Y" || s.packUnit === "S"
             ? `Продаётся упаковками по ${s.packQty} шт`
             : `В упаковке ${s.packQty} шт — заказ кратно упаковке`}
         </span>
-      )}
+      ) : null}
       <span className="flex items-center gap-2">
         {dot(true)}
         Отгрузка со склада в Омске 24–48 часов, доставка до терминала ТК бесплатно

@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 }
 
 type Params = {
-  searchParams: Promise<{ sortBy?: SortOptions; page?: string; q?: string; size?: string; pmin?: string; pmax?: string; stock?: string }>
+  searchParams: Promise<{ sortBy?: SortOptions; page?: string; q?: string; size?: string; pmin?: string; pmax?: string; stock?: string; sale?: string; new?: string }>
   params: Promise<{ countryCode: string }>
 }
 

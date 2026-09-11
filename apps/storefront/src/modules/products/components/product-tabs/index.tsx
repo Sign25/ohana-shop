@@ -3,13 +3,18 @@
 import { productSpecs } from "@/lib/util/ohana"
 import { HttpTypes } from "@medusajs/types"
 import Accordion from "./accordion"
+import SizeChart from "@/modules/products/components/size-chart"
 
 /** Описание приходит из 1С HTML-ом; характеристики — из metadata товара (см. import-cscart.ts) */
 const ProductTabs = ({ product }: { product: HttpTypes.StoreProduct }) => {
   const specs = productSpecs(product)
+  const cats = (product.categories || []) as any[]
+  const kids = cats.some((c) => /девоч|мальчик|детск|malchik|devoch|detsk/i.test(`${c.name} ${c.handle}`)) || /^(9|1[0-4])\d\b/.test(String((product.metadata as any)?.size_range || ""))
+  const clothing = !cats.some((c) => /продукт|напит|текстиль для дома|аксессуар/i.test(String(c.name)))
   const tabs = [
     { label: "Описание", component: <DescriptionTab html={product.description || ""} /> },
     { label: "Характеристики", component: <SpecsTab rows={specs} /> },
+    ...(clothing ? [{ label: "Таблица размеров", component: <SizeChart kids={kids} /> }] : []),
   ]
 
   return (

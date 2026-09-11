@@ -6,7 +6,10 @@ export type CatalogFilters = {
   size?: string[]
   pmin?: number
   pmax?: number
+  /** "" — все товары (в адресе stock=all); по умолчанию показываем только в наличии */
   stock?: "any" | "full" | ""
+  sale?: boolean
+  new?: boolean
 }
 export type CatalogOrder = "new" | "price_asc" | "price_desc" | "title"
 export type CatalogFacets = {
@@ -15,6 +18,8 @@ export type CatalogFacets = {
   price_max: number
   in_stock: number
   full_row: number
+  sale: number
+  new: number
 }
 
 /** Поиск по каталогу с фильтрами (наш маршрут /store/ohana/catalog): id товаров в нужном порядке + фасеты */
@@ -34,6 +39,8 @@ export const searchCatalog = async (params: {
   if (f.pmin) query.pmin = f.pmin
   if (f.pmax) query.pmax = f.pmax
   if (f.stock) query.stock = f.stock
+  if (f.sale) query.sale = 1
+  if (f.new) query.new = 1
   return sdk.client.fetch<{ ids: string[]; count: number; facets: CatalogFacets }>(`/store/ohana/catalog`, {
     method: "GET",
     query,
@@ -48,6 +55,9 @@ export const parseCatalogFilters = async (sp: Record<string, string | string[] |
     size: one(sp.size).split(",").map((s) => s.trim()).filter(Boolean),
     pmin: Number(one(sp.pmin)) || 0,
     pmax: Number(one(sp.pmax)) || 0,
-    stock: one(sp.stock) === "any" ? "any" : one(sp.stock) === "full" ? "full" : "",
+    // по умолчанию — только в наличии (как кнопка «Скрыть отсутствующие» на старом сайте); stock=all — показать всё
+    stock: one(sp.stock) === "all" ? "" : one(sp.stock) === "full" ? "full" : "any",
+    sale: one(sp.sale) === "1",
+    new: one(sp.new) === "1",
   }
 }

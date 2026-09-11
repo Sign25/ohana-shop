@@ -113,3 +113,47 @@ export const productSpecs = (product: HttpTypes.StoreProduct) => {
   add("Орган сертификации", m.cert_org)
   return rows
 }
+
+
+/** Как продаётся товар: комплектом («Номенклатура 2026»), упаковкой (соки) или поштучно кратно упаковке */
+export type SaleMode = {
+  mode: "set" | "packY" | "packS" | "pieces"
+  /** штук в комплекте / упаковке */
+  perUnit: number
+  /** единица заказа для покупателя */
+  unitWord: string
+  unitWordPlural: [string, string, string]
+  /** шаг корзины в штуках (для packY корзина считает упаковки — шаг 1) */
+  cartStep: number
+  /** цена в БД — за штуку или за упаковку */
+  priceIsPerPack: boolean
+}
+export const saleMode = (product: HttpTypes.StoreProduct): SaleMode => {
+  const m = (product.metadata || {}) as Record<string, any>
+  const v0 = (product.variants?.[0]?.metadata || {}) as VariantMeta & { pack_unit?: string }
+  const per = Math.max(1, Number(m.set_qty) || Number(v0.pack_qty) || Number(v0.qty_step) || 1)
+  if (m.pack || v0.pack_unit === "Y" || v0.pack_unit === "S") {
+    const y = v0.pack_unit === "Y"
+    return { mode: y ? "packY" : "packS", perUnit: per, unitWord: "упаковка", unitWordPlural: ["упаковка", "упаковки", "упаковок"], cartStep: y ? 1 : per, priceIsPerPack: y }
+  }
+  if (m.lineika) return { mode: "set", perUnit: per, unitWord: "комплект", unitWordPlural: ["комплект", "комплекта", "комплектов"], cartStep: per, priceIsPerPack: false }
+  return { mode: "pieces", perUnit: per, unitWord: "шт", unitWordPlural: ["штука", "штуки", "штук"], cartStep: 1, priceIsPerPack: false }
+}
+
+/** Бейджи карточки/списка — те же правила, что на старом сайте (кроме «Хит» по Wildberries — позже) */
+export const NEW_FROM = Date.parse("2026-09-12T00:00:00+03:00") // после миграции: старый каталог не светится «новинкой»
+export const NEW_DAYS = 21
+export const productBadges = (product: HttpTypes.StoreProduct): { key: string; label: string; tone: "primary" | "azure" | "mint" | "gold" | "graphite" }[] => {
+  const out: { key: string; label: string; tone: "primary" | "azure" | "mint" | "gold" | "graphite" }[] = []
+  const m = (product.metadata || {}) as Record<string, any>
+  const variants = (product.variants || []) as any[]
+  if (variants.some((v) => Number(v.metadata?.price_sale) > 0)) out.push({ key: "promo", label: "Акция", tone: "primary" })
+  const created = product.created_at ? Date.parse(String(product.created_at)) : 0
+  if (created >= NEW_FROM && Date.now() - created < NEW_DAYS * 86400000 && !m.lineika) out.push({ key: "new", label: "Новинка", tone: "mint" })
+  const cats = (product.categories || []) as any[]
+  if (cats.some((c) => c.handle === "big-size")) out.push({ key: "big", label: "Big size", tone: "azure" })
+  if (cats.some((c) => c.handle === "osen-zima-2027")) out.push({ key: "season", label: "Осень/зима", tone: "gold" })
+  if (m.pack) out.push({ key: "pack", label: "Упаковка", tone: "graphite" })
+  else if (m.lineika) out.push({ key: "set", label: "Комплект", tone: "graphite" })
+  return out
+}

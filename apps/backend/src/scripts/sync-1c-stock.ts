@@ -30,7 +30,10 @@ export default async function syncStock({ container, args }: ExecArgs) {
     const qty = Number(r["Кол"]) || 0
     const key = !har || har === ZERO_GUID ? nom : `${nom}#${har}`
     byKey.set(key, (byKey.get(key) || 0) + qty)
-    byNom.set(nom, (byNom.get(nom) || 0) + qty)
+    // сумма по номенклатуре (комплекты «Номенклатуры 2026»): отрицательные строки размеров — недостачи учёта,
+    // в сумму не идут, иначе комплект уходит в ноль (так же делал старый сайт)
+    if (qty > 0) byNom.set(nom, (byNom.get(nom) || 0) + qty)
+    else if (!byNom.has(nom)) byNom.set(nom, 0)
   }
   logger.info(`1С: номенклатуры на сайте ${inScope.size}, строк остатков ${rows.length} (${((Date.now() - t0) / 1000).toFixed(1)} с)`)
 

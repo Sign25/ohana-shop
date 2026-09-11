@@ -72,7 +72,7 @@ export default async function PaginatedProducts({
   }
 
   const totalPages = Math.ceil(count / PRODUCT_LIMIT)
-  const filtered = !!(filters && ((filters.size && filters.size.length) || filters.pmin || filters.pmax || filters.stock))
+  const filtered = !!(filters && ((filters.size && filters.size.length) || filters.pmin || filters.pmax || filters.stock === "full" || filters.sale || filters.new))
 
   return (
     <>
@@ -84,6 +84,8 @@ export default async function PaginatedProducts({
           ? `По запросу «${q}» ничего не нашлось`
           : filtered
           ? "По таким условиям ничего не нашлось — попробуйте снять часть фильтров"
+          : filters?.stock === "any" && facets && facets.in_stock === 0 && facets.sizes.length === 0
+          ? "Сейчас всё распродано — нажмите «Все», чтобы посмотреть модели и оставить заявку"
           : "В этом разделе пока нет товаров"}
       </div>
       {products.length > 0 && (

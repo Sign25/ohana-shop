@@ -2,6 +2,7 @@
 
 import { HttpTypes } from "@medusajs/types"
 import { clx } from "@medusajs/ui"
+import ProductBadges from "@/modules/products/components/product-badges"
 import Image from "next/image"
 import { useCallback, useEffect, useMemo, useState } from "react"
 
@@ -29,6 +30,7 @@ const ImageGallery = ({ product }: { product: HttpTypes.StoreProduct }) => {
   return (
     <div className="flex w-full flex-col gap-3">
       <div className="relative aspect-[3/4] w-full overflow-hidden rounded-card border border-oh-line bg-white">
+        <ProductBadges product={product} size="lg" />
         {cur?.url && (
           <Image
             src={cur.url}

@@ -30,17 +30,22 @@ const CatalogFiltersBar = ({ facets, filters }: { facets: CatalogFacets; filters
   const selected = new Set(filters.size || [])
   const toggleSize = (k: string) => { const next = new Set(selected); next.has(k) ? next.delete(k) : next.add(k); push({ size: [...next].join(",") }) }
   const applyPrice = () => push({ pmin: Number(pmin) > 0 ? String(Number(pmin)) : "", pmax: Number(pmax) > 0 ? String(Number(pmax)) : "" })
-  const active = selected.size > 0 || !!filters.pmin || !!filters.pmax || !!filters.stock
-  const reset = () => push({ size: "", pmin: "", pmax: "", stock: "" })
+  const active = selected.size > 0 || !!filters.pmin || !!filters.pmax || filters.stock !== "any" || !!filters.sale || !!filters.new
+  const reset = () => push({ size: "", pmin: "", pmax: "", stock: "", sale: "", new: "" })
 
   const LIMIT = 18
   const sizes = showAll ? facets.sizes : facets.sizes.slice(0, LIMIT)
   const sizeLabel = (k: string) => (/^[a-z0-9]+$/.test(k) && /[a-z]/.test(k) ? k.toUpperCase() : k)
-  const stockOptions: { value: CatalogFilters["stock"]; label: string; count?: number }[] = [
-    { value: "", label: "Все" },
-    { value: "any", label: "В наличии", count: facets.in_stock },
-    { value: "full", label: "Полный ряд", count: facets.full_row },
+  // в адресе: по умолчанию (без stock) — в наличии; stock=full — полный ряд; stock=all — все, включая распроданные
+  const stockOptions: { value: "any" | "full" | ""; param: string; label: string; count?: number }[] = [
+    { value: "any", param: "", label: "В наличии", count: facets.in_stock },
+    { value: "full", param: "full", label: "Полный ряд", count: facets.full_row },
+    { value: "", param: "all", label: "Все" },
   ]
+  const tags: { key: "sale" | "new"; label: string; count: number; on: boolean }[] = [
+    { key: "sale", label: "Акция", count: facets.sale, on: !!filters.sale },
+    { key: "new", label: "Новинки", count: facets.new, on: !!filters.new },
+  ].filter((t) => t.count > 0 || t.on)
 
   return (
     <div className="oh-card mb-3 flex flex-col gap-3 p-3" data-testid="catalog-filters">
@@ -100,14 +105,14 @@ const CatalogFiltersBar = ({ facets, filters }: { facets: CatalogFacets; filters
         <div className="flex items-center gap-1.5" role="radiogroup" aria-label="Наличие">
           <span className="text-[13px] text-oh-muted">Наличие</span>
           {stockOptions.map((o) => {
-            const on = (filters.stock || "") === o.value
+            const on = (filters.stock ?? "any") === o.value
             return (
               <button
-                key={o.value || "all"}
+                key={o.param || "any"}
                 type="button"
                 role="radio"
                 aria-checked={on}
-                onClick={() => push({ stock: o.value || "" })}
+                onClick={() => push({ stock: o.param })}
                 className={clx(
                   "h-9 whitespace-nowrap rounded-pill border px-3 text-[13px] font-medium transition-colors",
                   on ? "border-oh-azure bg-oh-azure text-white" : "border-oh-line-2 bg-white text-oh-ink hover:border-oh-azure hover:text-oh-azure"
@@ -119,6 +124,25 @@ const CatalogFiltersBar = ({ facets, filters }: { facets: CatalogFacets; filters
             )
           })}
         </div>
+        {tags.length > 0 && (
+          <div className="flex items-center gap-1.5">
+            {tags.map((t) => (
+              <button
+                key={t.key}
+                type="button"
+                aria-pressed={t.on}
+                onClick={() => push({ [t.key]: t.on ? "" : "1" })}
+                className={clx(
+                  "h-9 whitespace-nowrap rounded-pill border px-3 text-[13px] font-medium transition-colors",
+                  t.on ? (t.key === "sale" ? "border-oh-primary bg-oh-primary text-white" : "border-oh-mint-deep bg-oh-mint-deep text-white") : "border-oh-line-2 bg-white text-oh-ink hover:border-oh-azure hover:text-oh-azure"
+                )}
+              >
+                {t.label}
+                <span className={clx("ml-1 text-[12px]", t.on ? "text-white/80" : "text-oh-muted")}>{t.count}</span>
+              </button>
+            ))}
+          </div>
+        )}
         {active && (
           <button type="button" onClick={reset} className="ml-auto h-9 text-[13px] text-oh-primary hover:underline">
             Сбросить фильтры

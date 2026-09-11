@@ -10,6 +10,7 @@ import React, { Suspense } from "react"
 import ProductActionsWrapper from "./product-actions-wrapper"
 import ProductFacts from "../components/product-facts"
 import EcDetail from "@/modules/analytics/ec-detail"
+import ProductAlternatives from "@/modules/products/components/product-alternatives"
 
 type ProductTemplateProps = {
   product: HttpTypes.StoreProduct
@@ -25,7 +26,12 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({ product, region, coun
       <div className="content-container flex flex-col gap-4 py-6">
         <EcDetail product={product} />
         <div className="grid w-full grid-cols-1 gap-6 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]" data-testid="product-container">
-          <ImageGallery product={product} />
+          <div className="flex flex-col gap-4">
+            <ImageGallery product={product} />
+            <Suspense fallback={null}>
+              <ProductAlternatives productId={product.id} currentColor={String((product.metadata as any)?.color_label || "") || undefined} />
+            </Suspense>
+          </div>
           <div className="flex w-full flex-col gap-5">
             <ProductInfo product={product} />
             <Suspense fallback={<ProductActions product={product} region={region} />}>

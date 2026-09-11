@@ -18,7 +18,8 @@ const Hero = async () => {
     : DEFAULT_BANNERS
   const showcases = visibleShowcases(categories)
   const chips = [
-    { label: "Новинки", href: "/store?sortBy=created_at" },
+    { label: "Новинки", href: "/store?new=1" },
+    { label: "Акции", href: "/store?sale=1" },
     ...showcases.map((c) => ({ label: c.name, href: `/categories/${c.handle}` })),
   ]
 

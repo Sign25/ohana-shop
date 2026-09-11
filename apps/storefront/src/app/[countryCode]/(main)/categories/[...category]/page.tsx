@@ -17,6 +17,8 @@ type Props = {
     pmin?: string
     pmax?: string
     stock?: string
+    sale?: string
+    new?: string
   }>
 }
 
