@@ -44,7 +44,7 @@ export default async function ProductPreview({
   if (s.code) title = title.replace(new RegExp(`,?\\s*(артикул:?\\s*)?${esc(s.code)}\\b`, "i"), "")
   if (colorLabel) title = title.replace(new RegExp(`,\\s*${esc(colorLabel)}\\s*$`, "i"), "")
   // хвосты вида «(330 мл (24 банки в упаковке))» — упаковка показана отдельным чипом
-  title = title.replace(/\s*\((?:[^()]*\([^()]*\)[^()]*|[^()]*)(?:упаковк|в уп\.)[^()]*\)\s*$/i, "")
+  title = title.replace(/\s*\([\s\S]*?(?:упаковк|в уп\.)[\s\S]*\)\s*$/i, "")
   title = title.replace(/\s{2,}/g, " ").replace(/[,\s]+$/, "").trim() || product.title
   const colorHint = colorLabel && !title.toLowerCase().includes(colorLabel.toLowerCase().split(/[ ,]/)[0].replace(/(ый|ая|ое|ые|ий|яя)$/, "")) ? colorLabel : ""
 
@@ -92,7 +92,7 @@ export default async function ProductPreview({
             <span className="tabular-nums">{s.code ? `Арт. ${s.code}` : " "}</span>
             {colorHint && <span className="truncate text-right">{colorHint}</span>}
           </div>
-          <h3 className="line-clamp-3 min-h-[2.5em] text-[14px] font-medium leading-[1.25] text-oh-ink small:line-clamp-2" data-testid="product-title">
+          <h3 className="line-clamp-3 min-h-[2.5em] text-[14px] font-medium leading-[1.25] text-oh-ink" data-testid="product-title">
             {title}
           </h3>
           <WbRatingLine wb={wb} compact reserve />
