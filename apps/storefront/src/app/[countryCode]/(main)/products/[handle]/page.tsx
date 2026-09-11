@@ -7,6 +7,8 @@ import { Metadata } from "next"
 import { notFound } from "next/navigation"
 
 export const dynamicParams = true
+// ISR: страница пересобирается не реже раза в 120 с — остатки и цены приходят из 1С, без этого они замирали на моменте сборки
+export const revalidate = 120
 
 type Props = {
   params: { countryCode: string; handle: string }

@@ -4,6 +4,9 @@ import SkeletonFeaturedProducts from "@/modules/skeletons/templates/skeleton-fea
 import { Metadata } from "next"
 import { Suspense } from "react"
 
+// ISR: страница пересобирается не реже раза в 60 с — остатки и цены приходят из 1С, без этого они замирали на моменте сборки
+export const revalidate = 60
+
 export const metadata: Metadata = {
   title: "Ohana Market — одежда и домашний текстиль оптом от производителя",
   description:
