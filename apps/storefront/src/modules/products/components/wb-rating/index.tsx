@@ -21,10 +21,10 @@ export const Stars = ({ value, size = 12 }: { value: number; size?: number }) =>
 
 const WbRatingLine = ({ wb, compact, className, reserve }: { wb?: WbRating | null; compact?: boolean; className?: string; reserve?: boolean }) => {
   // в плитке место под рейтинг занято всегда (как на старом сайте) — строки карточек не смещаются
-  if (!wb || !wb.count) return reserve ? <span className={clx("inline-flex items-center gap-1 text-[12px] text-oh-muted", className)} title="Пока нет отзывов"><Stars value={0} size={11} /><span>0</span></span> : null
+  if (!wb || !wb.count) return reserve ? <span className={clx("inline-flex h-[18px] items-center gap-1 text-[11px] text-oh-muted/70", className)} title="Отзывов на Wildberries пока нет"><Stars value={0} size={11} /><span>нет отзывов</span></span> : null
   if (compact) {
     return (
-      <span className={clx("inline-flex items-center gap-1 text-[12px] text-oh-graphite", className)} title={`Wildberries: ${wb.rating.toFixed(2)} · ${wb.count} ${plural(wb.count, "отзыв", "отзыва", "отзывов")}`}>
+      <span className={clx("inline-flex h-[18px] items-center gap-1 text-[12px] text-oh-graphite", className)} title={`Wildberries: ${wb.rating.toFixed(2)} · ${wb.count} ${plural(wb.count, "отзыв", "отзыва", "отзывов")}`}>
         <Stars value={wb.rating} size={11} />
         <span className="font-medium text-oh-ink">{wb.rating.toFixed(1)}</span>
         <span className="text-oh-muted">({wb.count})</span>

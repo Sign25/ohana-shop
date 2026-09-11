@@ -31,7 +31,7 @@ export const getProductsById = async ({
         region_id: regionId,
         fields:
           // категории нужны бейджам списков (Лето / Школа / Big size) и «главной категории» (не подборке)
-          "*variants,*variants.calculated_price,+variants.inventory_quantity,+variants.metadata,+metadata,*categories",
+          "*variants,*variants.calculated_price,+variants.inventory_quantity,+variants.metadata,+metadata,*categories,*images",
       },
       headers,
       next,

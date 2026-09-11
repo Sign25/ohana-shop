@@ -18,6 +18,7 @@ const CatalogFiltersBar = ({ facets, filters }: { facets: CatalogFacets; filters
   const [pmin, setPmin] = useState(filters.pmin ? String(filters.pmin) : "")
   const [pmax, setPmax] = useState(filters.pmax ? String(filters.pmax) : "")
   const [showAll, setShowAll] = useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false) // на телефоне панель свёрнута, чтобы товары были сразу под заголовком
   useEffect(() => { setPmin(filters.pmin ? String(filters.pmin) : ""); setPmax(filters.pmax ? String(filters.pmax) : "") }, [filters.pmin, filters.pmax])
 
   const push = (patch: Record<string, string>) => {
@@ -48,8 +49,14 @@ const CatalogFiltersBar = ({ facets, filters }: { facets: CatalogFacets; filters
     { key: "new", label: "Новинки", count: facets.new, on: !!filters.new },
   ].filter((t) => t.count > 0 || t.on)
 
+  const activeCount = selected.size + (filters.pmin || filters.pmax ? 1 : 0) + (filters.stock !== "any" ? 1 : 0) + (filters.sale ? 1 : 0) + (filters.new ? 1 : 0) + (filters.hits ? 1 : 0)
   return (
     <div className="oh-card mb-3 flex flex-col gap-3 p-3" data-testid="catalog-filters">
+      <button type="button" onClick={() => setMobileOpen((v) => !v)} className="flex items-center justify-between text-[14px] font-medium text-oh-ink small:hidden" aria-expanded={mobileOpen}>
+        <span>Фильтры и размеры{activeCount > 0 && <span className="ml-2 rounded-pill bg-oh-azure px-2 py-0.5 text-[12px] text-white">{activeCount}</span>}</span>
+        <span className={clx("text-oh-muted transition-transform", mobileOpen && "rotate-180")}>⌄</span>
+      </button>
+      <div className={clx("flex-col gap-3", mobileOpen ? "flex" : "hidden small:flex")}>
       {facets.sizes.length > 1 && (
         <div className="flex flex-wrap items-center gap-1.5">
           <span className="mr-1 text-[13px] text-oh-muted">Размер</span>
@@ -155,6 +162,7 @@ const CatalogFiltersBar = ({ facets, filters }: { facets: CatalogFacets; filters
           Цена {filters.pmin ? `от ${formatRub(filters.pmin)}` : ""} {filters.pmax ? `до ${formatRub(filters.pmax)}` : ""} — по оптовой цене за штуку
         </div>
       ) : null}
+      </div>
     </div>
   )
 }
