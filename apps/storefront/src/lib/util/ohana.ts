@@ -123,7 +123,20 @@ export const productSpecs = (product: HttpTypes.StoreProduct) => {
   add("Состав", m.composition)
   add("Цвет", m.color_label)
   add("Изготовитель", m.manufacturer)
-  if (product.weight) add("Вес", `${product.weight} г`)
+  // вес и габариты приходят из 1С на вариант (у комплекта/упаковки — на всё вложение, ≥1 кг делим на количество)
+  const variants = (product.variants || []) as any[]
+  const v0 = variants.find((v) => Number(v.weight) > 0) || variants[0]
+  const per = Math.max(1, Number(m.set_qty) || Number(v0?.metadata?.pack_qty) || 1)
+  const packUnit = String(v0?.metadata?.pack_unit || "N")
+  const raw = Number(v0?.weight) || Number(product.weight) || 0
+  if (raw > 0) {
+    const perPiece = raw >= 1000 && per > 1 && packUnit !== "Y" ? raw / per : raw
+    const fmtW = (g: number) => (g >= 1000 ? `${(g / 1000).toFixed(g % 1000 ? 2 : 0).replace(/\.?0+$/, "")} кг` : `${Math.round(g)} г`)
+    if (m.lineika || m.pack) { add(m.lineika ? "Вес комплекта" : "Вес упаковки", fmtW(perPiece * per)); add("Вес 1 шт", fmtW(perPiece)) }
+    else add("Вес", fmtW(perPiece))
+  }
+  const vd = variants.find((v) => Number(v.length) > 0 && Number(v.width) > 0 && Number(v.height) > 0) || (Number(product.length) > 0 ? product : null)
+  if (vd) add(m.lineika ? "Габариты комплекта (Д×Ш×В)" : m.pack ? "Габариты упаковки (Д×Ш×В)" : "Габариты упаковки (Д×Ш×В)", `${Number(vd.length)} × ${Number(vd.width)} × ${Number(vd.height)} см`)
   add("Документ соответствия", m.cert_doc)
   add("Дата выдачи", m.cert_issued)
   add("Действует до", m.cert_until)
