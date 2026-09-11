@@ -3,7 +3,6 @@ import { sdk } from "@/lib/config"
 /** Рейтинг и отзывы Wildberries по артикулу (маршрут /store/ohana/wb) */
 export type WbRating = { rating: number; count: number; texts: number }
 export type WbReview = { valuation: number; author: string; body: string; date: string }
-export const HIT_MIN_REVIEWS = 1000 // «Хит продаж» — от 1000 отзывов на Wildberries
 
 export const getWbRatings = async (codes: string[]): Promise<Record<string, WbRating>> => {
   const list = [...new Set(codes.filter(Boolean))]

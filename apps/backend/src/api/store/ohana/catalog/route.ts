@@ -8,7 +8,8 @@ import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
  *
  * Параметры: category_id (через запятую), q, size (через запятую, ключи размеров), pmin, pmax, stock=any|full|all,
  * sale=1 (акционная цена из 1С), new=1 (новинки — товары моложе NEW_DAYS дней, но не старше запуска нового сайта),
- * order=new|price_asc|price_desc|title, limit, offset. Товары без фото не показываем.
+ * hits=1 (хиты: WB > 1000 отзывов и рейтинг > 4.7 или ручной отбор), order=title (по умолчанию, как на старом сайте)|new|hits|position
+ * (rank_handle — ручной порядок витрины)|price_asc|price_desc, limit, offset. Товары без фото не показываем.
  * Данные читаются одним SQL (query.graph с ценами и остатками по 700 товарам занимает ~10 с, SQL — ~100 мс).
  */
 
@@ -23,11 +24,14 @@ const sizeSort = (a: string, b: string) => {
 }
 const list = (v: unknown): string[] => (Array.isArray(v) ? v : typeof v === "string" && v ? v.split(",") : []).map((s) => String(s).trim()).filter(Boolean)
 
-type Row = { id: string; title: string; created_at: Date; size: string | null; price: number | null; stock: number | null; sale: number | null; hits: number | null }
+type Row = { id: string; title: string; created_at: Date; size: string | null; price: number | null; stock: number | null; sale: number | null; hits: number | null; wb_rating: number | null; hit_manual: boolean | null; created_1c: number | null; rank: number | null }
 
-/** «Новинка» — как на витрине (lib/util/ohana.ts): после запуска нового сайта и не старше 21 дня */
-const NEW_FROM = Date.parse("2026-09-12T00:00:00+03:00"), NEW_DAYS = 21
+/** Правила старого сайта: «Новинка» — создан после 28.06.2026 (миграционный каталог не светится) и не старше 21 дня;
+ *  тег «Новинки» — за 60 дней; «Хит» — Wildberries: > 1000 отзывов и рейтинг > 4.7, либо ручной отбор (metadata.hit_manual) */
+const NEW_FROM = Date.parse("2026-06-28T00:00:00+03:00"), NEW_DAYS = 21, NEW_TAG_DAYS = 60
+const HIT_MIN_REVIEWS = 1000, HIT_MIN_RATING = 4.7
 const isNew = (created: number) => created >= NEW_FROM && Date.now() - created < NEW_DAYS * 86400000
+const isNewTag = (created: number) => created >= NEW_FROM && Date.now() - created < NEW_TAG_DAYS * 86400000
 
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const pg = req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION) as any
@@ -38,14 +42,15 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     const { rows } = await pg.raw(`with recursive t as (select id from product_category where handle = ? and deleted_at is null
       union all select c.id from product_category c join t on c.parent_category_id = t.id where c.deleted_at is null) select id from t`, [String(qp.category_handle)])
     categoryIds.push(...rows.map((r: any) => r.id))
-    if (!categoryIds.length) return res.json({ ids: [], count: 0, facets: { sizes: [], price_min: 0, price_max: 0, in_stock: 0, full_row: 0, sale: 0, new: 0 } })
+    if (!categoryIds.length) return res.json({ ids: [], count: 0, facets: { sizes: [], price_min: 0, price_max: 0, in_stock: 0, full_row: 0, sale: 0, new: 0, hits: 0 } })
   }
   const q = String(qp.q || "").trim()
   const sizes = new Set(list(qp.size).map((s) => s.toLowerCase()))
   const pmin = Number(qp.pmin) || 0, pmax = Number(qp.pmax) || 0
   const stock = qp.stock === "full" ? "full" : qp.stock === "any" ? "any" : ""
-  const onlySale = qp.sale === "1", onlyNew = qp.new === "1"
-  const order = ["new", "hits", "price_asc", "price_desc", "title"].includes(qp.order) ? qp.order : "new"
+  const onlySale = qp.sale === "1", onlyNew = qp.new === "1", onlyHits = qp.hits === "1"
+  const rankHandle = String(qp.rank_handle || "") // витрина с ручным порядком (metadata.showcase_rank[handle])
+  const order = ["new", "hits", "position", "price_asc", "price_desc", "title"].includes(qp.order) ? qp.order : "title"
   const limit = Math.min(Math.max(Number(qp.limit) || 24, 1), 100), offset = Math.max(Number(qp.offset) || 0, 0)
 
   const where: string[] = ["p.deleted_at is null", "p.status = 'published'", "p.thumbnail is not null"], binds: any[] = []
@@ -55,6 +60,10 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const sql = `
     select p.id, p.title, p.created_at, v.metadata->>'size' as size, min(pr.amount)::float as price,
            coalesce((select w.reviews_count from ohana_wb_rating w where w.product_code = p.metadata->>'code' and w.deleted_at is null limit 1), 0)::int as hits,
+           coalesce((select w.rating from ohana_wb_rating w where w.product_code = p.metadata->>'code' and w.deleted_at is null limit 1), 0)::float as wb_rating,
+           (p.metadata->>'hit_manual' = 'true') as hit_manual,
+           nullif(p.metadata->>'created_1c', '')::bigint as created_1c,
+           (p.metadata->'showcase_rank'->>?)::float as rank,
            nullif(v.metadata->>'price_sale', '')::float as sale,
            coalesce(sum(il.stocked_quantity - il.reserved_quantity), 0)::float as stock
     from product p
@@ -65,13 +74,13 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     left join inventory_level il on il.inventory_item_id = vi.inventory_item_id and il.deleted_at is null
     where ${where.join(" and ")}
     group by p.id, v.id`
-  const { rows } = (await pg.raw(sql, binds)) as { rows: Row[] }
+  const { rows } = (await pg.raw(sql, [rankHandle, ...binds])) as { rows: Row[] }
 
-  type P = { id: string; title: string; created: number; minPrice: number; sizesIn: Set<string>; sizesAll: Set<string>; anyStock: boolean; full: boolean; n: number; sale: boolean; hits: number }
+  type P = { id: string; title: string; created: number; minPrice: number; sizesIn: Set<string>; sizesAll: Set<string>; anyStock: boolean; full: true | false; n: number; sale: boolean; hits: number; isHit: boolean; rank: number }
   const byId = new Map<string, P>()
   for (const r of rows) {
     let p = byId.get(r.id)
-    if (!p) { p = { id: r.id, title: r.title, created: new Date(r.created_at).getTime(), minPrice: Infinity, sizesIn: new Set(), sizesAll: new Set(), anyStock: false, full: true, n: 0, sale: false, hits: Number(r.hits) || 0 }; byId.set(r.id, p) }
+    if (!p) { const hits = Number(r.hits) || 0; p = { id: r.id, title: r.title, created: r.created_1c ? Number(r.created_1c) * 1000 : new Date(r.created_at).getTime(), minPrice: Infinity, sizesIn: new Set(), sizesAll: new Set(), anyStock: false, full: true, n: 0, sale: false, hits, isHit: (hits > HIT_MIN_REVIEWS && Number(r.wb_rating) > HIT_MIN_RATING) || !!r.hit_manual, rank: r.rank === null ? Infinity : Number(r.rank) }; byId.set(r.id, p) }
     if ((r.sale || 0) > 0 && (!r.price || (r.sale as number) < r.price)) p.sale = true
     const k = sizeKey(r.size || ""), inStock = (r.stock || 0) > 0
     p.n++
@@ -92,7 +101,8 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     in_stock: scope.filter((p) => p.anyStock).length,
     full_row: scope.filter((p) => p.anyStock && p.full).length,
     sale: scope.filter((p) => p.sale && p.anyStock).length,
-    new: scope.filter((p) => isNew(p.created) && p.anyStock).length,
+    new: scope.filter((p) => isNewTag(p.created) && p.anyStock).length,
+    hits: scope.filter((p) => p.isHit && p.anyStock).length,
   }
 
   let hits = scope
@@ -102,12 +112,16 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
   if (stock === "any") hits = hits.filter((p) => p.anyStock)
   if (stock === "full") hits = hits.filter((p) => p.anyStock && p.full)
   if (onlySale) hits = hits.filter((p) => p.sale)
-  if (onlyNew) hits = hits.filter((p) => isNew(p.created))
+  if (onlyNew) hits = hits.filter((p) => isNewTag(p.created))
+  if (onlyHits) hits = hits.filter((p) => p.isHit)
 
   const price = (p: P) => (isFinite(p.minPrice) ? p.minPrice : 1e12) // без цены — в конец
   const cmp: Record<string, (a: P, b: P) => number> = {
     new: (a, b) => b.created - a.created,
-    hits: (a, b) => (b.hits - a.hits) || (b.created - a.created), // по числу отзывов на Wildberries
+    // по числу отзывов на Wildberries; ручные хиты без рейтинга — в середину выдачи (3000), как на старом сайте
+    hits: (a, b) => ((b.hits || (b.isHit ? 3000 : 0)) - (a.hits || (a.isHit ? 3000 : 0))) || (b.created - a.created),
+    // ручной порядок витрины (позиции со старого сайта), без позиции — в конец по названию
+    position: (a, b) => (a.rank - b.rank) || a.title.localeCompare(b.title, "ru"),
     price_asc: (a, b) => (price(a) - price(b)) || (b.created - a.created),
     price_desc: (a, b) => (price(b) - price(a)) || (b.created - a.created),
     title: (a, b) => a.title.localeCompare(b.title, "ru"),

@@ -1,7 +1,7 @@
 import { formatRub, plural, productSummary, saleMode, variantSale } from "@/lib/util/ohana"
 import ProductBadges from "@/modules/products/components/product-badges"
 import WbRatingLine from "@/modules/products/components/wb-rating"
-import { HIT_MIN_REVIEWS, WbRating } from "@/lib/data/wb"
+import { WbRating } from "@/lib/data/wb"
 import CardImage from "@/modules/products/components/card-image"
 import LocalizedClientLink from "@/modules/common/components/localized-client-link"
 import { HttpTypes } from "@medusajs/types"
@@ -52,7 +52,7 @@ export default async function ProductPreview({
               Всё разобрали
             </span>
           )}
-          <ProductBadges product={product} hit={!!wb && wb.count >= HIT_MIN_REVIEWS} />
+          <ProductBadges product={product} wb={wb} />
         </div>
         <div className="flex flex-1 flex-col gap-1.5 p-3.5">
           {s.code && <div className="text-[12px] text-oh-muted">Арт. {s.code}</div>}
@@ -61,7 +61,7 @@ export default async function ProductPreview({
           </div>
           {/* цвет из 1С, если он не входит в название (в каталоге «Номенклатура 2026» одно название на несколько расцветок) */}
           {colorHint && <div className="-mt-1 text-[12px] text-oh-muted">{colorHint}</div>}
-          <WbRatingLine wb={wb} compact />
+          <WbRatingLine wb={wb} compact reserve />
           <div className="mt-auto flex flex-col gap-0.5 pt-1">
             {s.minPrice !== null ? (
               <div className="text-[17px] font-semibold text-oh-ink" data-testid="price">

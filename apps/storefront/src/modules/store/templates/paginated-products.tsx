@@ -13,9 +13,10 @@ import { HttpTypes } from "@medusajs/types"
 export const PRODUCT_LIMIT = 24
 
 const ORDER: Record<SortOptions, CatalogOrder> = {
+  title: "title",
   created_at: "new",
   hits: "hits",
-  title: "title",
+  position: "position",
   price_asc: "price_asc",
   price_desc: "price_desc",
 }
@@ -35,6 +36,7 @@ export default async function PaginatedProducts({
   countryCode,
   q,
   filters,
+  rankHandle,
 }: {
   sortBy?: SortOptions
   page: number
@@ -47,6 +49,8 @@ export default async function PaginatedProducts({
   optionValueIds?: string[]
   q?: string
   filters?: CatalogFilters
+  /** категория с ручным порядком (order=position) */
+  rankHandle?: string
 }) {
   const region = await getRegion(countryCode)
   if (!region) return null
@@ -63,7 +67,7 @@ export default async function PaginatedProducts({
   } else {
     const found = await searchCatalog({
       categoryIds: categoryIds?.length ? categoryIds : categoryId ? [categoryId] : undefined,
-      q, filters, order: ORDER[sortBy || "created_at"] || "new", limit: PRODUCT_LIMIT, offset: (Math.max(page, 1) - 1) * PRODUCT_LIMIT,
+      q, filters, order: ORDER[sortBy || "title"] || "title", rankHandle, limit: PRODUCT_LIMIT, offset: (Math.max(page, 1) - 1) * PRODUCT_LIMIT,
     })
     count = found.count; facets = found.facets
     if (found.ids.length) {
@@ -75,7 +79,7 @@ export default async function PaginatedProducts({
 
   const wb = await getWbRatings(products.map((p) => String((p.metadata as any)?.code || "")))
   const totalPages = Math.ceil(count / PRODUCT_LIMIT)
-  const filtered = !!(filters && ((filters.size && filters.size.length) || filters.pmin || filters.pmax || filters.stock === "full" || filters.sale || filters.new))
+  const filtered = !!(filters && ((filters.size && filters.size.length) || filters.pmin || filters.pmax || filters.stock === "full" || filters.sale || filters.new || filters.hits))
 
   return (
     <>

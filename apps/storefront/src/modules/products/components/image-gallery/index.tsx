@@ -7,7 +7,7 @@ import Image from "next/image"
 import { useCallback, useEffect, useMemo, useState } from "react"
 
 /** Галерея: большое фото 3:4 на белом, ряд миниатюр, стрелки и клавиши ←/→ */
-const ImageGallery = ({ product, hit }: { product: HttpTypes.StoreProduct; hit?: boolean }) => {
+const ImageGallery = ({ product, wb }: { product: HttpTypes.StoreProduct; wb?: { rating: number; count: number } | null }) => {
   const images = useMemo(
     () => (product?.images?.length ? product.images : product?.thumbnail ? [{ id: "thumb", url: product.thumbnail }] : []),
     [product]
@@ -30,7 +30,7 @@ const ImageGallery = ({ product, hit }: { product: HttpTypes.StoreProduct; hit?:
   return (
     <div className="flex w-full flex-col gap-3">
       <div className="relative aspect-[3/4] w-full overflow-hidden rounded-card border border-oh-line bg-white">
-        <ProductBadges product={product} size="lg" hit={hit} />
+        <ProductBadges product={product} size="lg" wb={wb} />
         {cur?.url && (
           <Image
             src={cur.url}

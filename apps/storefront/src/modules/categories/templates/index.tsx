@@ -25,7 +25,9 @@ export default function CategoryTemplate({
   filters?: CatalogFilters
 }) {
   const pageNumber = page ? parseInt(page) : 1
-  const sort = sortBy || "created_at"
+  // как на старом сайте: обычный раздел — по названию; подборка (сезонная витрина) — ручной порядок позиций
+  const showcase = (currentCategory.metadata as any)?.kind === "showcase"
+  const sort = sortBy || (showcase ? "position" : "title")
   if (!currentCategory || !countryCode) notFound()
 
   const children = categories.filter((c) => c.parent_category_id === currentCategory.id)
@@ -51,7 +53,7 @@ export default function CategoryTemplate({
           <RefinementList sortBy={sort} categories={categories} currentCategory={currentCategory} listName={currentCategory.name} data-testid="sort-by-container" hideOptionsPicker />
           <div className="w-full">
             <Suspense fallback={<SkeletonProductGrid />}>
-              <PaginatedProducts sortBy={sort} page={pageNumber} categoryIds={categoryIds} countryCode={countryCode} filters={filters} />
+              <PaginatedProducts sortBy={sort} page={pageNumber} categoryIds={categoryIds} countryCode={countryCode} filters={filters} rankHandle={showcase ? currentCategory.handle : undefined} />
             </Suspense>
           </div>
         </div>

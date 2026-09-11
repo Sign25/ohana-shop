@@ -3,13 +3,14 @@ import { getRegion } from "@/lib/data/regions"
 import { HttpTypes } from "@medusajs/types"
 import Product from "../product-preview"
 import { getWbRatings } from "@/lib/data/wb"
+import { mainCategory } from "@/lib/util/ohana"
 
 /** «Похожие товары» — из той же категории, что и текущий товар */
 export default async function RelatedProducts({ product, countryCode }: { product: HttpTypes.StoreProduct; countryCode: string }) {
   const region = await getRegion(countryCode)
   if (!region) return null
 
-  const categoryId = product.categories?.[0]?.id
+  const categoryId = mainCategory(product)?.id
   const queryParams: Record<string, any> = {
     region_id: region.id,
     limit: 5,

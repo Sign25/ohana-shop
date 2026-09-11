@@ -4,7 +4,8 @@ import { getProductByHandle } from "@/lib/data/products"
 import { getRegion, listRegions } from "@/lib/data/regions"
 import ProductTemplate from "@/modules/products/templates"
 import { Metadata } from "next"
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
+import { getGoneRedirect } from "@/lib/data/product-extras"
 
 export const dynamicParams = true
 // ISR: страница пересобирается не реже раза в 120 с — остатки и цены приходят из 1С, без этого они замирали на моменте сборки
@@ -83,7 +84,11 @@ export default async function ProductPage(props: Props) {
   }
 
   const pricedProduct = await getProductByHandle(params.handle, region.id)
-  if (!pricedProduct) {
+  // правило старого сайта: товар без фото или снятый с витрины (архив / блокировка 1С) не показываем —
+  // ведём в его раздел (302, блокировка обратима), несуществующий адрес — 404
+  if (!pricedProduct || !pricedProduct.thumbnail) {
+    const to = await getGoneRedirect(params.handle)
+    if (to) redirect(`/${params.countryCode}${to}`)
     notFound()
   }
 

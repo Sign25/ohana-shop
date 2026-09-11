@@ -157,20 +157,42 @@ export const saleMode = (product: HttpTypes.StoreProduct): SaleMode => {
   return { mode: "pieces", perUnit: per, unitWord: "шт", unitWordPlural: ["штука", "штуки", "штук"], cartStep: 1, priceIsPerPack: false }
 }
 
-/** Бейджи карточки/списка — те же правила, что на старом сайте (кроме «Хит» по Wildberries — позже) */
-export const NEW_FROM = Date.parse("2026-09-12T00:00:00+03:00") // после миграции: старый каталог не светится «новинкой»
+/**
+ * Бейджи — правила старого сайта (fn_ohana_pricing_set_badges): Акция отдельно слева вверху; справа внизу по порядку
+ * Хит (WB > 1000 отзывов и рейтинг > 4.7 или ручной отбор), Новинка (создан после 28.06.2026 и не старше 21 дня,
+ * у комплектов не показываем), Big size, Лето, Школа, Упаковка | Комплект. Цвета — как в head_scripts старого сайта.
+ */
+export const NEW_FROM = Date.parse("2026-06-28T00:00:00+03:00")
 export const NEW_DAYS = 21
-export const productBadges = (product: HttpTypes.StoreProduct): { key: string; label: string; tone: "primary" | "azure" | "mint" | "gold" | "graphite" }[] => {
-  const out: { key: string; label: string; tone: "primary" | "azure" | "mint" | "gold" | "graphite" }[] = []
+export const HIT_MIN_REVIEWS = 1000
+export const HIT_MIN_RATING = 4.7
+export type Badge = { key: string; label: string; color: string }
+export const productCreatedAt = (product: HttpTypes.StoreProduct) => {
+  const m = (product.metadata || {}) as Record<string, any>
+  return Number(m.created_1c) ? Number(m.created_1c) * 1000 : product.created_at ? Date.parse(String(product.created_at)) : 0
+}
+export const isHit = (product: HttpTypes.StoreProduct, wb?: { rating: number; count: number } | null) =>
+  !!(product.metadata as any)?.hit_manual || (!!wb && wb.count > HIT_MIN_REVIEWS && wb.rating > HIT_MIN_RATING)
+export const productBadges = (product: HttpTypes.StoreProduct, wb?: { rating: number; count: number } | null): Badge[] => {
+  const out: Badge[] = []
   const m = (product.metadata || {}) as Record<string, any>
   const variants = (product.variants || []) as any[]
-  if (variants.some((v) => variantSale(v) > 0)) out.push({ key: "promo", label: "Акция", tone: "primary" })
-  const created = product.created_at ? Date.parse(String(product.created_at)) : 0
-  if (created >= NEW_FROM && Date.now() - created < NEW_DAYS * 86400000 && !m.lineika) out.push({ key: "new", label: "Новинка", tone: "mint" })
   const cats = (product.categories || []) as any[]
-  if (cats.some((c) => c.handle === "big-size")) out.push({ key: "big", label: "Big size", tone: "azure" })
-  if (cats.some((c) => c.handle === "osen-zima-2027")) out.push({ key: "season", label: "Осень/зима", tone: "gold" })
-  if (m.pack) out.push({ key: "pack", label: "Упаковка", tone: "graphite" })
-  else if (m.lineika) out.push({ key: "set", label: "Комплект", tone: "graphite" })
+  const inCat = (handle: string) => cats.some((c) => c.handle === handle)
+  if (variants.some((v) => variantSale(v) > 0)) out.push({ key: "promo", label: "Акция", color: "#F4503A" })
+  if (isHit(product, wb)) out.push({ key: "hit", label: "Хит", color: "#E69C4E" })
+  const created = productCreatedAt(product)
+  if (created >= NEW_FROM && Date.now() - created < NEW_DAYS * 86400000 && !m.lineika) out.push({ key: "new", label: "Новинка", color: "#16a34a" })
+  if (inCat("big-size")) out.push({ key: "big", label: "Big size", color: "#246075" })
+  if (inCat("leto-2026")) out.push({ key: "summer", label: "Лето", color: "#0ea5e9" })
+  if (inCat("shkola")) out.push({ key: "school", label: "Школа", color: "#4c6ef5" })
+  if (m.pack) out.push({ key: "pack", label: "Упаковка", color: "#5FA88C" })
+  else if (m.lineika) out.push({ key: "set", label: "Комплект", color: "#246075" })
   return out
+}
+
+/** Главная категория товара — профильная из каталога (не подборка), как на старом сайте */
+export const mainCategory = (product: HttpTypes.StoreProduct) => {
+  const cats = (product.categories || []) as any[]
+  return cats.find((c) => c.metadata?.kind !== "showcase" && c.metadata?.kind !== "manual-hits") || cats[0] || null
 }

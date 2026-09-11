@@ -2,7 +2,7 @@
 
 import { ChevronUpDown } from "@medusajs/icons"
 
-export type SortOptions = "created_at" | "hits" | "title" | "price_asc" | "price_desc"
+export type SortOptions = "title" | "created_at" | "hits" | "position" | "price_asc" | "price_desc"
 
 type SortProductsProps = {
   sortBy: SortOptions
@@ -10,12 +10,13 @@ type SortProductsProps = {
   "data-testid"?: string
 }
 
+/** Порядок как на старом сайте: по умолчанию — по названию; «Рекомендуем» — ручной порядок витрины */
 const sortOptions: { value: SortOptions; label: string }[] = [
+  { value: "title", label: "По названию" },
   { value: "created_at", label: "Сначала новые" },
   { value: "hits", label: "Хиты продаж" },
   { value: "price_asc", label: "Сначала дешевле" },
   { value: "price_desc", label: "Сначала дороже" },
-  { value: "title", label: "По названию" },
 ]
 
 const SortProducts = ({ "data-testid": dataTestId, sortBy, setQueryParams }: SortProductsProps) => {
@@ -30,6 +31,7 @@ const SortProducts = ({ "data-testid": dataTestId, sortBy, setQueryParams }: Sor
           onChange={(e) => setQueryParams("sortBy", e.target.value as SortOptions)}
           data-testid={dataTestId}
         >
+          {sortBy === "position" && <option value="position">Рекомендуем</option>}
           {sortOptions.map((o) => (
             <option key={o.value} value={o.value}>
               {o.label}

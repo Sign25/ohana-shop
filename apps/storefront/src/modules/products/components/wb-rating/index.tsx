@@ -19,8 +19,9 @@ export const Stars = ({ value, size = 12 }: { value: number; size?: number }) =>
   </span>
 )
 
-const WbRatingLine = ({ wb, compact, className }: { wb?: WbRating | null; compact?: boolean; className?: string }) => {
-  if (!wb || !wb.count) return null
+const WbRatingLine = ({ wb, compact, className, reserve }: { wb?: WbRating | null; compact?: boolean; className?: string; reserve?: boolean }) => {
+  // в плитке место под рейтинг занято всегда (как на старом сайте) — строки карточек не смещаются
+  if (!wb || !wb.count) return reserve ? <span className={clx("inline-flex items-center gap-1 text-[12px] text-oh-muted", className)} title="Пока нет отзывов"><Stars value={0} size={11} /><span>0</span></span> : null
   if (compact) {
     return (
       <span className={clx("inline-flex items-center gap-1 text-[12px] text-oh-graphite", className)} title={`Wildberries: ${wb.rating.toFixed(2)} · ${wb.count} ${plural(wb.count, "отзыв", "отзыва", "отзывов")}`}>

@@ -30,8 +30,8 @@ const CatalogFiltersBar = ({ facets, filters }: { facets: CatalogFacets; filters
   const selected = new Set(filters.size || [])
   const toggleSize = (k: string) => { const next = new Set(selected); next.has(k) ? next.delete(k) : next.add(k); push({ size: [...next].join(",") }) }
   const applyPrice = () => push({ pmin: Number(pmin) > 0 ? String(Number(pmin)) : "", pmax: Number(pmax) > 0 ? String(Number(pmax)) : "" })
-  const active = selected.size > 0 || !!filters.pmin || !!filters.pmax || filters.stock !== "any" || !!filters.sale || !!filters.new
-  const reset = () => push({ size: "", pmin: "", pmax: "", stock: "", sale: "", new: "" })
+  const active = selected.size > 0 || !!filters.pmin || !!filters.pmax || filters.stock !== "any" || !!filters.sale || !!filters.new || !!filters.hits
+  const reset = () => push({ size: "", pmin: "", pmax: "", stock: "", sale: "", new: "", hits: "" })
 
   const LIMIT = 18
   const sizes = showAll ? facets.sizes : facets.sizes.slice(0, LIMIT)
@@ -42,7 +42,8 @@ const CatalogFiltersBar = ({ facets, filters }: { facets: CatalogFacets; filters
     { value: "full", param: "full", label: "Полный ряд", count: facets.full_row },
     { value: "", param: "all", label: "Все" },
   ]
-  const tags: { key: "sale" | "new"; label: string; count: number; on: boolean }[] = [
+  const tags: { key: "hits" | "sale" | "new"; label: string; count: number; on: boolean }[] = [
+    { key: "hits", label: "Хиты", count: facets.hits, on: !!filters.hits },
     { key: "sale", label: "Акция", count: facets.sale, on: !!filters.sale },
     { key: "new", label: "Новинки", count: facets.new, on: !!filters.new },
   ].filter((t) => t.count > 0 || t.on)
@@ -134,7 +135,7 @@ const CatalogFiltersBar = ({ facets, filters }: { facets: CatalogFacets; filters
                 onClick={() => push({ [t.key]: t.on ? "" : "1" })}
                 className={clx(
                   "h-9 whitespace-nowrap rounded-pill border px-3 text-[13px] font-medium transition-colors",
-                  t.on ? (t.key === "sale" ? "border-oh-primary bg-oh-primary text-white" : "border-oh-mint-deep bg-oh-mint-deep text-white") : "border-oh-line-2 bg-white text-oh-ink hover:border-oh-azure hover:text-oh-azure"
+                  t.on ? (t.key === "sale" ? "border-oh-primary bg-oh-primary text-white" : t.key === "hits" ? "border-[#E69C4E] bg-[#E69C4E] text-white" : "border-oh-mint-deep bg-oh-mint-deep text-white") : "border-oh-line-2 bg-white text-oh-ink hover:border-oh-azure hover:text-oh-azure"
                 )}
               >
                 {t.label}

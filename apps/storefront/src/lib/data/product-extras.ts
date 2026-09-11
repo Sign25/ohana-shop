@@ -34,3 +34,11 @@ export const requestCallback = async (data: { name: string; phone: string; comme
     return await sdk.client.fetch<{ ok: boolean; message: string }>(`/store/ohana/callback`, { method: "POST", body: data })
   } catch (e: any) { return { ok: false, message: e?.message || "Не получилось отправить — позвоните нам: 8 (991) 430-17-30." } }
 }
+
+/** Куда вести с адреса скрытого товара (draft / без фото): раздел каталога или /store */
+export const getGoneRedirect = async (handle: string): Promise<string | null> => {
+  try {
+    const r = await sdk.client.fetch<{ exists: boolean; hidden?: boolean; redirect: string | null }>(`/store/ohana/gone`, { method: "GET", query: { handle }, cache: "no-store" })
+    return r.exists ? r.redirect : null
+  } catch { return null }
+}
