@@ -196,6 +196,18 @@ export default async function importCml({ container, args }: ExecArgs) {
 
   const stat = { newProducts: 0, newVariants: 0, updated: 0, imagesAdded: 0, skippedOutOfSite: 0, errors: 0 }
   const imgOk = (rel: string) => fs.existsSync(path.join(WEB_DIR, webRel(rel)))
+  // промо-карточки («лауреат премий» и т.п.) 1С прикладывает к десяткам номенклатур одной и той же картинкой:
+  // считаем md5 веб-копий, картинка из ≥3 разных номенклатур — общая, главным фото не становится, к существующим не добавляется
+  const crypto = require("crypto") as typeof import("crypto")
+  const imgHash = new Map<string, string>(), hashNoms = new Map<string, Set<string>>()
+  for (const it of items) for (const im of it.images) {
+    const rel = webRel(im); if (imgHash.has(rel)) { hashNoms.get(imgHash.get(rel)!)?.add(it.nom); continue }
+    const f = path.join(WEB_DIR, rel); if (!fs.existsSync(f)) continue
+    const h = crypto.createHash("md5").update(fs.readFileSync(f)).digest("hex"); imgHash.set(rel, h)
+    if (!hashNoms.has(h)) hashNoms.set(h, new Set()); hashNoms.get(h)!.add(it.nom)
+  }
+  const isShared = (im: string) => { const h = imgHash.get(webRel(im)); return !!h && (hashNoms.get(h)?.size || 0) >= 3 }
+  logger.info(`общих промо-картинок: ${[...hashNoms.values()].filter((s) => s.size >= 3).length}`)
   let processed = 0
 
   for (const [nom, group] of byNom) {
@@ -215,7 +227,9 @@ export default async function importCml({ container, args }: ExecArgs) {
       const catIds = (await Promise.all([...new Set(group.flatMap((i) => i.groups))].map(ensureCategory))).filter(Boolean) as string[]
       // фото: объединяем по всем размерам, без дублей, первое у первой позиции = главное; только те, что уже пережаты
       const seen = new Set<string>(); const imgs: string[] = []
-      for (const it of group) for (const im of it.images) { const rel = im.replace(/^import_files\//, ""); if (!seen.has(rel) && imgOk(im)) { seen.add(rel); imgs.push(webUrl(im)) } }
+      const sharedImgs: string[] = []
+      for (const it of group) for (const im of it.images) { const rel = im.replace(/^import_files\//, ""); if (!seen.has(rel) && imgOk(im)) { seen.add(rel); (isShared(im) ? sharedImgs : imgs).push(webUrl(im)) } }
+      imgs.push(...sharedImgs)
       const title = cleanTitle(main.name)
       const description = group.map((i) => i.desc).sort((a, b) => b.length - a.length)[0] || ""
 
@@ -262,7 +276,7 @@ export default async function importCml({ container, args }: ExecArgs) {
       const upd: any = {}
       if (description && description.length > (existing.description || "").length + 20) upd.description = description
       const have = new Set((existing.images || []).map((im: any) => path.basename(im.url)))
-      const add = imgs.filter((u) => !have.has(path.basename(u)))
+      const add = imgs.filter((u) => !have.has(path.basename(u)) && !sharedImgs.includes(u))
       if (add.length) { upd.images = [...(existing.images || []).map((im: any) => ({ url: im.url })), ...add.map((url) => ({ url }))]; stat.imagesAdded += add.length; if (!existing.thumbnail) upd.thumbnail = upd.images[0].url }
       const m = existing.metadata || {}
       const metaChanged = Object.entries(specMeta).some(([k, v]) => v && String(m[k] ?? "") !== String(v))
