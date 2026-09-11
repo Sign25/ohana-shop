@@ -7,6 +7,10 @@ import LocalizedClientLink from "@/modules/common/components/localized-client-li
 import ProductPreview from "@/modules/products/components/product-preview"
 import { getWbRatings } from "@/lib/data/wb"
 import { HttpTypes } from "@medusajs/types"
+import SectionTiles, { SectionTile } from "@/modules/home/components/section-tiles"
+import StripBanner from "@/modules/home/components/strip-banner"
+import HowToStart from "@/modules/home/components/how-to-start"
+import { SECTION_TILES } from "@/lib/util/home-content"
 
 
 /**
@@ -33,7 +37,10 @@ export default async function FeaturedProducts({ countryCode }: { countryCode: s
       const found = await searchCatalog({ categoryIds: ids, filters: { stock: "any" }, order: "hits", limit: 16, offset: 0 }).catch(() => ({ ids: [] as string[] }))
       const got = found.ids.length ? await getProductsById({ ids: found.ids, regionId: region.id }) : []
       const byId = new Map(got.map((p) => [p.id, p]))
-      return { category: c, products: dedup(found.ids.map((id) => byId.get(id)).filter(Boolean) as typeof got, 4) }
+      // большие плитки подразделов (со старого сайта): подраздел ищем по названию внутри раздела
+      const kids = categories.filter((k) => k.parent_category_id === c.id)
+      const tiles: SectionTile[] = (SECTION_TILES[c.handle] || []).map((t) => ({ title: t.title, img: t.img, href: `/categories/${kids.find((k) => t.match.test(k.name))?.handle || c.handle}` }))
+      return { category: c, tiles, products: dedup(found.ids.map((id) => byId.get(id)).filter(Boolean) as typeof got, 4) }
     })
   )
 
@@ -47,9 +54,9 @@ export default async function FeaturedProducts({ countryCode }: { countryCode: s
     <div className="content-container flex flex-col gap-10 py-6">
       {sections
         .filter((s) => s.products.length > 0)
-        .map(({ category, products }) => (
-          <section key={category.id}>
-            <div className="mb-4 flex items-baseline justify-between">
+        .map(({ category, tiles, products }, idx) => (
+          <section key={category.id} className="flex flex-col gap-6">
+            <div className="-mb-3 flex items-baseline justify-between">
               <LocalizedClientLink href={`/categories/${category.handle}`} className="oh-h text-[28px] hover:text-oh-azure">
                 {audienceLabel(category.name)} <span className="text-oh-muted">›</span>
               </LocalizedClientLink>
@@ -57,6 +64,7 @@ export default async function FeaturedProducts({ countryCode }: { countryCode: s
                 Смотреть все
               </LocalizedClientLink>
             </div>
+            <SectionTiles tiles={tiles} />
             <ul className="grid grid-cols-2 gap-3 small:grid-cols-4">
               {products.map((p) => (
                 <li key={p.id}>
@@ -64,6 +72,9 @@ export default async function FeaturedProducts({ countryCode }: { countryCode: s
                 </li>
               ))}
             </ul>
+            {/* как на старом сайте: рекламная полоса после второй секции, «Как начать» — после четвёртой */}
+            {idx === 1 && <StripBanner />}
+            {idx === 3 && <HowToStart />}
           </section>
         ))}
       {newest.length >= 4 && (

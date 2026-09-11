@@ -21,7 +21,7 @@ const Login = ({ setCurrentView }: Props) => {
       </div>
       <form className="w-full" action={formAction}>
         <div className="flex w-full flex-col gap-y-2">
-          <Input label="Эл. почта" name="email" type="email" title="Введите корректный email" autoComplete="email" required data-testid="email-input" />
+          <Input label="Email" name="email" type="email" title="Введите корректный email" autoComplete="email" required data-testid="email-input" />
           <Input label="Пароль" name="password" type="password" autoComplete="current-password" required data-testid="password-input" />
           <div className="mt-3 flex items-center gap-2">
             <Checkbox name="remember_me" data-testid="remember-me-checkbox" />
