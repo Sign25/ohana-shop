@@ -1,5 +1,6 @@
 import { QUOTE_MODULE } from "./src/modules/quote";
 import { APPROVAL_MODULE } from "./src/modules/approval";
+import { CONTENT_MODULE } from "./src/modules/content";
 import { COMPANY_MODULE } from "./src/modules/company";
 import { loadEnv, defineConfig, Modules } from "@medusajs/framework/utils";
 
@@ -21,12 +22,17 @@ module.exports = defineConfig({
   admin: {
     backendUrl: process.env.MEDUSA_BACKEND_URL,
     disable: process.env.DISABLE_MEDUSA_ADMIN === "true",
+    // в workspace две копии React (18 у dashboard, 19 у витрины на Next 15): без dedupe расширения админки
+    // собирались с другой копией и любая страница падала с React error #31
+    vite: () => ({ resolve: { dedupe: ["react", "react-dom", "react-router-dom", "@medusajs/ui", "@tanstack/react-query"] } }),
   },
   modules: {
     // инфраструктура на Redis (боевой режим): события, кеш, воркфлоу, блокировки
     [Modules.EVENT_BUS]: { resolve: "@medusajs/medusa/event-bus-redis", options: { redisUrl: process.env.REDIS_URL } },
     [Modules.CACHE]: { resolve: "@medusajs/medusa/cache-redis", options: { redisUrl: process.env.REDIS_URL } },
     [Modules.WORKFLOW_ENGINE]: { resolve: "@medusajs/medusa/workflow-engine-redis", options: { redis: { url: process.env.REDIS_URL } } },
+    // загрузки из админки (баннеры и т.п.): постоянный каталог вне сборки, отдаётся Caddy как /uploads/*
+    [Modules.FILE]: { resolve: "@medusajs/medusa/file", options: { providers: [{ resolve: "@medusajs/medusa/file-local", id: "local", options: { upload_dir: "/srv/ohana/shared/uploads", backend_url: "https://api.ohanaopt.ru/uploads" } }] } },
     [Modules.LOCKING]: { resolve: "@medusajs/medusa/locking", options: { providers: [{ resolve: "@medusajs/medusa/locking-redis", id: "locking-redis", is_default: true, options: { redisUrl: process.env.REDIS_URL } }] } },
     [COMPANY_MODULE]: {
       resolve: "./modules/company",
@@ -36,6 +42,10 @@ module.exports = defineConfig({
     },
     [APPROVAL_MODULE]: {
       resolve: "./modules/approval",
+    },
+    // страницы и баннеры витрины (админка «Страницы»/«Баннеры»)
+    [CONTENT_MODULE]: {
+      resolve: "./modules/content",
     },
   },
 });

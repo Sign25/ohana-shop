@@ -1,32 +1,33 @@
 import pages from "@/content/pages.json"
+import { getPage } from "@/lib/data/content"
 import LocalizedClientLink from "@/modules/common/components/localized-client-link"
 import { Metadata } from "next"
 import { notFound } from "next/navigation"
 
 /**
- * Служебные страницы, перенесённые со старого сайта (src/content/pages.json — HTML + свои стили
- * как были в CS-Cart). Правятся в этом файле; ссылки на старый сайт остались только у разделов
- * с калькуляторами (бизнес с Оханой, подбор размера, совместные покупки) — их переносим отдельно.
+ * Служебные страницы витрины. Источник — админка «Страницы» (модуль content), запасной вариант —
+ * src/content/pages.json (тот же HTML со своими стилями, как было в CS-Cart). Новые страницы из админки
+ * открываются без пересборки (dynamicParams), кэш 60 с.
  */
-type Page = { title: string; page_title: string; meta: string; has_h1: boolean; html: string }
-const PAGES = pages as Record<string, Page>
+export const dynamicParams = true
+export const revalidate = 60
 
 type Props = { params: Promise<{ countryCode: string; slug: string }> }
 
 export async function generateStaticParams() {
-  return Object.keys(PAGES).map((slug) => ({ countryCode: "ru", slug }))
+  return Object.keys(pages).map((slug) => ({ countryCode: "ru", slug }))
 }
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const { slug } = await props.params
-  const page = PAGES[slug]
+  const page = await getPage(slug)
   if (!page) return { title: "Страница не найдена" }
-  return { title: page.page_title.replace(/\s*[—|-]\s*Ohana Market.*$/i, ""), description: page.meta || undefined }
+  return { title: (page.page_title || page.title).replace(/\s*[—|-]\s*Ohana Market.*$/i, ""), description: page.meta || undefined }
 }
 
 export default async function ContentPage(props: Props) {
   const { slug } = await props.params
-  const page = PAGES[slug]
+  const page = await getPage(slug)
   if (!page) notFound()
 
   return (

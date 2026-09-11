@@ -90,7 +90,7 @@ const Companies = () => {
 };
 
 export const config = defineRouteConfig({
-  label: "Companies",
+  label: "Компании",
   icon: BuildingStorefront,
 });
 

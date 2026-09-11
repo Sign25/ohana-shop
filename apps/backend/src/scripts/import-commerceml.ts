@@ -181,6 +181,11 @@ export default async function importCml({ container, args }: ExecArgs) {
     const parentGid = groupParent.get(gid)
     const parentName = parentGid ? groupName.get(parentGid)?.trim() : ""
     const parentId = parentGid && !SITE_GROUPS.has(parentName || "") ? await ensureCategory(parentGid) : null
+    // у 1С бывает второе дерево групп с теми же названиями (старые GUID): совпадение по имени и родителю —
+    // это та же категория, дубль не создаём (11.09 так появились вторые «Мужская одежда» и «Домашний текстиль»)
+    const norm = (x: string) => x.toLowerCase().replace(/ё/g, "е").replace(/\s+/g, " ").trim()
+    const same = cats.find((c: any) => norm(c.name) === norm(name) && (c.parent_category_id || null) === (parentId === "dry" ? c.parent_category_id : parentId))
+    if (same) { catByGuid.set(g, same); return same.id }
     let handle = translit(name); if (catHandles.has(handle)) handle = `${handle}-${g.slice(0, 8)}`
     catHandles.add(handle)
     if (dry) { logger.info(`[dry] новая категория «${name}» (${groupPath(gid).join(" › ")})`); catByGuid.set(g, { id: "dry" }); return "dry" }

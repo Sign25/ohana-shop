@@ -1,17 +1,21 @@
 import { listCategoryTree } from "@/lib/data/categories"
+import { listBanners } from "@/lib/data/content"
 import { visibleShowcases } from "@/lib/util/ohana"
 import LocalizedClientLink from "@/modules/common/components/localized-client-link"
 import { clx } from "@medusajs/ui"
 import Image from "next/image"
 
-/** Главные баннеры — те же креативы, что на ohanaopt.ru; под ними чипы-подборки (как на текущем сайте). */
-const banners = [
+/** Баннеры карусели — из админки «Баннеры» (модуль content); если там пусто, показываем креативы по умолчанию */
+const DEFAULT_BANNERS = [
   { href: "/categories/osen-zima-2027", src: "/hero/hero_autumn_family.jpg", w: 1280, h: 371, alt: "Осень/зима 2027 — тёплая одежда для всей семьи" },
   { href: "/categories/zhenskaya-odezhda", src: "/hero/hero_pir_mir.jpg", w: 1932, h: 560, alt: "И в пир, и в мир, и в добрые люди — женская одежда" },
 ]
 
 const Hero = async () => {
-  const categories = await listCategoryTree().catch(() => [])
+  const [categories, adminBanners] = await Promise.all([listCategoryTree().catch(() => []), listBanners("hero")])
+  const banners = adminBanners.length
+    ? adminBanners.map((b) => ({ href: b.link || "/store", src: b.image_url, w: 1920, h: 560, alt: b.alt || b.title }))
+    : DEFAULT_BANNERS
   const showcases = visibleShowcases(categories)
   const chips = [
     { label: "Новинки", href: "/store?sortBy=created_at" },
