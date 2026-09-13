@@ -55,6 +55,25 @@ export class OnecMcp {
     if (data.truncated) throw new Error("ответ 1С обрезан по лимиту строк")
     return data.rows
   }
+
+  /** Список инструментов 1С-MCP (tools/list) */
+  async tools(): Promise<any[]> {
+    if (!this.sid) await this.init()
+    const r = await post(this.url, { jsonrpc: "2.0", id: this.id++, method: "tools/list", params: {} }, this.sid)
+    const json = r.text.split(/\r?\n/).filter((l) => l.startsWith("data:")).map((l) => l.slice(5)).join("") || r.text
+    return JSON.parse(json.trim())?.result?.tools || []
+  }
+
+  /** Вызвать любой инструмент 1С-MCP; вернуть текст ответа как есть */
+  async call(name: string, args: Record<string, any> = {}): Promise<string> {
+    if (!this.sid) await this.init()
+    const r = await post(this.url, { jsonrpc: "2.0", id: this.id++, method: "tools/call", params: { name, arguments: args } }, this.sid)
+    if (r.status < 200 || r.status >= 300) throw new Error(`MCP 1С: HTTP ${r.status}`)
+    const json = r.text.split(/\r?\n/).filter((l) => l.startsWith("data:")).map((l) => l.slice(5)).join("") || r.text
+    const env = JSON.parse(json.trim())
+    if (env?.error) throw new Error(`MCP 1С: ${env.error.message || JSON.stringify(env.error)}`)
+    return (env?.result?.content || []).map((c: any) => c.text || "").join("\n")
+  }
 }
 
 export const ZERO_GUID = "00000000-0000-0000-0000-000000000000"
